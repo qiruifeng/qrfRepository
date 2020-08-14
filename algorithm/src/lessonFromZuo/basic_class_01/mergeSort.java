@@ -1,9 +1,7 @@
 package lessonFromZuo.basic_class_01;
 
 
-
-import static basic_class_01.compareUtil.*;
-
+import static utils.compareUtil.*;
 
 //归并排序，（外排序自己理解的版本）
 public class mergeSort {

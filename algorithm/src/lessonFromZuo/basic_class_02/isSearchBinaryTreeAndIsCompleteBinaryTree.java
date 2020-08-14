@@ -1,13 +1,13 @@
 package lessonFromZuo.basic_class_02;
 
-import tools.Node;
+
+import utils.Node;
 
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Stack;
 
-
-import static tools.tools.printTree;
+import static utils.tools.printTree;
 
 public class isSearchBinaryTreeAndIsCompleteBinaryTree {
 
@@ -120,4 +120,5 @@ public class isSearchBinaryTreeAndIsCompleteBinaryTree {
 
 
     }
+
 }

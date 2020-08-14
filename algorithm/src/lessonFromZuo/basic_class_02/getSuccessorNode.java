@@ -1,9 +1,9 @@
 package lessonFromZuo.basic_class_02;
 
 
-import tools.Node;
+import utils.Node;
 
-import static tools.tools.printTree;
+import static utils.tools.printTree;
 
 public class getSuccessorNode {
     public static Node getSuccessorNode(Node node){

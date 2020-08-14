@@ -1,6 +1,7 @@
 package lessonFromZuo.basic_class_05;
 
-import static tools.tools.generateRandomMatrix;
+
+import static utils.tools.generateRandomMatrix;
 
 public class minPath {
 

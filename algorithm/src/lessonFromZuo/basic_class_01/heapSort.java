@@ -1,7 +1,8 @@
 package lessonFromZuo.basic_class_01;
 
-import static basic_class_01.compareUtil.exchange;
-import static basic_class_01.compareUtil.printArray;
+
+import static utils.compareUtil.exchange;
+import static utils.compareUtil.printArray;
 
 public class heapSort {
     public static void heapSort(int[] arr) {

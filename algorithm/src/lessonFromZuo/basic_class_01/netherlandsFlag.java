@@ -1,6 +1,6 @@
 package lessonFromZuo.basic_class_01;
 
-import static basic_class_01.compareUtil.*;
+import static utils.compareUtil.*;
 
 /**
  * 荷兰国旗问题
