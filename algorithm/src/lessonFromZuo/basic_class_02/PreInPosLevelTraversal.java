@@ -72,9 +72,9 @@ public class PreInPosLevelTraversal {
     }
 
     /**
+     * 中序遍历非递归
      * 当前节点一定会把自己的左边界都压到栈里去
      * 当前节点为空，从栈拿一个，打印，然后当前节点往右走；当前节点不为空，入栈，当前节点往左
-     *
      * @param head
      */
     public static void inOrderUnRecur(Node head) {
