@@ -1,5 +1,7 @@
 package utils;
 
+import java.util.ArrayList;
+
 public class tools {
     /**
      * 随机生成一维数组
@@ -15,6 +17,17 @@ public class tools {
             arr[i]=(int)(Math.random()*10);
         }
         return arr;
+    }
+
+    /**
+     * 打印链表
+     * @param list
+     */
+    public static <T> void printArrayList(ArrayList<T> list){
+        int n=list.size();
+        for (int i=0;i<n;i++){
+            System.out.print(list.get(i)+" ");
+        }
     }
 
     /**
