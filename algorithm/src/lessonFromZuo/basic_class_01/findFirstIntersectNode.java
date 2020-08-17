@@ -1,5 +1,8 @@
 package lessonFromZuo.basic_class_01;
 
+/**
+ * 两个单链表相交的一系列问题
+ */
 public class findFirstIntersectNode {
     public static class Node {
         public int value;
