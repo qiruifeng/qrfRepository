@@ -5,6 +5,15 @@ import utils.Node;
 
 import static utils.tools.printTree;
 
+/**
+ * 该结构比普通二叉树节点结构多了一个指向父节点的parent指针。
+ * 假设有一棵Node类型的节点组成的二叉树，树中每个节点的parent指针都正确地指向 自己的父节点，头节点的parent指向null。
+ * 只给一个在二叉树中的某个节点node，请实现返回node的后继节点的函数。 （不通过遍历整棵树的方式）
+ * ps：在二叉树的中序遍历的序列中， node的下一个节点叫作node的后继节点。
+ * 规律（先记住）：
+ * 一个节点如果有右孩子，那么这个节点的后继节点就是整个右子树最左的节点；
+ * 如果没有右孩子，那么就从自己开始(包括自己)一路往上找父节点，直到找到一个节点是其父节点的左孩子，那么这个父节点就是此节点的后继节点
+ */
 public class getSuccessorNode {
     public static Node getSuccessorNode(Node node){
         if (node==null){
