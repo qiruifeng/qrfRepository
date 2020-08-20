@@ -42,6 +42,18 @@ public class tools {
     }
 
     /**
+     * 打印二位数组
+     * @param matrix
+     */
+    public static void  printMatrix(int[][] matrix){
+        for (int i=0;i<matrix.length;i++){
+            for (int j=0;j<matrix[0].length;j++){
+                System.out.print(matrix[i][j]+" ");
+            }
+        }
+    }
+
+    /**
      * 打印字符串
      * @param arr
      */
@@ -116,4 +128,6 @@ public class tools {
         }
         return result;
     }
+
+
 }
