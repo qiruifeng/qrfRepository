@@ -8,7 +8,7 @@ import java.util.Scanner;
 
 import static utils.tools.printMatrix;
 
-public class huawei {
+public class huawei1 {
 
 
     static int count = 0;
