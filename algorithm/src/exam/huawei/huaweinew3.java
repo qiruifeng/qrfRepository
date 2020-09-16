@@ -1,4 +1,4 @@
-package exam;
+package exam.huawei;
 
 import java.util.Scanner;
 

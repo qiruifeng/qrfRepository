@@ -1,4 +1,4 @@
-package leetcode;
+package exam.xiaomi;
 
 import java.util.*;
 
@@ -35,18 +35,24 @@ public class isValid {
 
     public static void main(String[] args) {
 
-        Scanner scanner=new Scanner(System.in);
-        List<String> stringList=new ArrayList<>();
-        String s=null;
+//        Scanner scanner=new Scanner(System.in);
+//        List<String> stringList=new ArrayList<>();
+//        String s=null;
+//
+//        while (!(s=scanner.nextLine()).equals("")){
+//        //while (scanner.hasNextLine()){
+//            stringList.add(scanner.nextLine());
+//        }
+//
+//        for (int i = 0; i < stringList.size(); i++) {
+//            System.out.println(isValid(stringList.get(i)));
+//        }
+//
 
-        while (!(s=scanner.nextLine()).equals("")){
-        //while (scanner.hasNextLine()){
-            stringList.add(scanner.nextLine());
-        }
 
-        for (int i = 0; i < stringList.size(); i++) {
-            System.out.println(isValid(stringList.get(i)));
-        }
-
+        String s="{}{}{}))))";
+        String a="{}({})()";
+        System.out.println(isValid(s));
+        System.out.println(isValid(a));
     }
 }
