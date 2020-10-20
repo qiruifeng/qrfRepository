@@ -1,0 +1,9 @@
+#port
+server:
+  port: 7777
+
+spring:
+  application:
+    name: easyexcel
+  profiles:
+    active: dev

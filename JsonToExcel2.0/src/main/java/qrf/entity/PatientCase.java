@@ -33,4 +33,6 @@ public class PatientCase {
     private String 类型;
 
     private Date 报告时间;
+
+    private List<ElectronicMedicalRecordMenuAndDetails> 电子病历菜单及详情;
 }

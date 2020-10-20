@@ -4,25 +4,26 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class util {
 
-    public static List<File> getFiles(String path){
+    public static List<File> getFiles(String path) {
         File root = new File(path);
         List<File> files = new ArrayList<File>();
-        if(!root.isDirectory()){
+        if (!root.isDirectory()) {
             files.add(root);
-        }else{
+        } else {
             File[] subFiles = root.listFiles();
-            for(File f : subFiles){
+            for (File f : subFiles) {
                 files.addAll(getFiles(f.getAbsolutePath()));
             }
         }
         return files;
     }
 
-    public static String getJSONString(File jsonFile){
+    public static String getJSONString(File jsonFile) {
         String jsonStr = "";
-        try  {
+        try {
             FileReader fileReader = new FileReader(jsonFile);
             Reader reader = new InputStreamReader(new FileInputStream(jsonFile), "utf-8");
             int ch = 0;
@@ -33,7 +34,7 @@ public class util {
             fileReader.close();
             reader.close();
             jsonStr = sb.toString();
-            System.out.println(jsonStr);
+//            System.out.println(jsonStr);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -42,8 +43,26 @@ public class util {
         return jsonStr;
     }
 
-    public static void makeSheet(String sheetName){
 
+    /**
+     * 判断大字符串包含小字符串的位置
+     *
+     * @param string 大字符串
+     * @param target 小字符串
+     * @return
+     */
+    public static int getElectronicMedicalRecordMenuAndDetailsString(String string, String target) {
+        int L = 0;
+        int R = 0;
+        int l = target.length();
+        for (int i = 0; i < string.length() - l + 1; i++) {
+            String temp = string.substring(i, i + l);
+            if (temp.equals(target)) {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
 }

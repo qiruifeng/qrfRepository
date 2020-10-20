@@ -1,0 +1,23 @@
+#数据库连接配置
+spring:
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.0.100:3306/monitor?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: 941231
+    validationQuery: select 1
+
+#thymeleaf模板配置
+  thymeleaf:
+    mode: HTML5
+    encoding: UTF-8
+    servlet:
+      content-type: text/html
+    cache: false
+    prefix: classpath:/templates/
+
+#文件请求大小
+  servlet:
+    multipart:
+      max-file-size: 300MB
+      max-request-size: 500MB

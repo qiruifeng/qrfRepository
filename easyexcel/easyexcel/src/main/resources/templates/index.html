@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<head>
+    <meta charset="UTF-8">
+    <title>EasyExcel导入导出</title>
+</head>
+
+<body>
+Excel导入:
+<br/>
+<form enctype="multipart/form-data" method="post" action="/user/import">
+    文件:<input type="file" name="excel"/>
+    <input type="submit" value="Excel导入"/>
+</form>
+<br/>
+<br/>
+Excel导出:
+<form enctype="multipart/form-data" method="get" action="/user/export">
+    <input type="submit" value="Excel导出"/>
+</form>
+
+
+</body>
+</html>
