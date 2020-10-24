@@ -45,6 +45,9 @@ public class JSONToExcel {
         if (jsonArray.size() == 1) {
 
             JSONObject jsonObject = (JSONObject) jsonArray.get(0);
+            Long re= (Long) jsonObject.get("就诊ID");
+
+            System.out.println("re: "+re);
             PatientCase patientCase = JSON.parseObject(jsonObject.toString(), PatientCase.class);//获取到病人信息之后，填写表格
 
             //创建基本信息工作表
