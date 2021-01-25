@@ -17,7 +17,7 @@ import static cn.qrf.tools.tools.printArr;
 import static cn.qrf.tools.tools.printMatrix;
 
 /**
- * 给靖靖算死亡时间的
+ * 给靖靖算患者的死亡时间的
  */
 public class deadPatientTable {
 
