@@ -2,3 +2,4 @@
 *.iml
 vcs.xml
 out/
+.xls
