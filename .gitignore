@@ -2,4 +2,7 @@
 *.iml
 vcs.xml
 out/
-.xls
+*.xls
+target/
+*.cmd
+*.log
