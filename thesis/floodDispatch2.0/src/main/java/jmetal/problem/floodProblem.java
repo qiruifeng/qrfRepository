@@ -44,8 +44,8 @@ public class floodProblem extends AbstractDoubleProblem {
             upperLimit.add(175.0);
         }
 
-        setLowerLimit(lowerLimit);
         setUpperLimit(upperLimit);
+        setLowerLimit(lowerLimit);
 
     }
 
