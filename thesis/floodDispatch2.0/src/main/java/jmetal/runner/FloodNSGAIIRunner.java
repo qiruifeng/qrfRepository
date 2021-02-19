@@ -1,6 +1,6 @@
 package jmetal.runner;
 
-import jmetal.problem.floodProblem;
+import jmetal.problem.FloodProblem;
 import org.uma.jmetal.algorithm.Algorithm;
 import org.uma.jmetal.algorithm.multiobjective.nsgaii.NSGAII45;
 import org.uma.jmetal.operator.CrossoverOperator;
@@ -23,7 +23,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class floodNSGAIIRunner extends AbstractAlgorithmRunner {
+public class FloodNSGAIIRunner extends AbstractAlgorithmRunner {
     public static void main(String[] args) throws JMetalException, FileNotFoundException {
         Problem<DoubleSolution> problem;
         Algorithm<List<DoubleSolution>> algorithm;
@@ -32,7 +32,7 @@ public class floodNSGAIIRunner extends AbstractAlgorithmRunner {
         SelectionOperator<List<DoubleSolution>, DoubleSolution> selection;
         String referenceParetoFront = "" ;
         String problemName = "floodNew";
-        problem = new floodProblem(122, "Real");
+        problem = new FloodProblem(122, "Real");
 
         double crossoverProbability = 0.9 ;
         double crossoverDistributionIndex = 20.0;

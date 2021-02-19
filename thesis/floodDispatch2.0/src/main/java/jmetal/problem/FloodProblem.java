@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-public class floodProblem extends AbstractDoubleProblem {
+public class FloodProblem extends AbstractDoubleProblem {
 
     private static final long serialVersionUID = 1L;
 
@@ -29,7 +29,7 @@ public class floodProblem extends AbstractDoubleProblem {
      * @param xNum 决策变量个数
      * @param solutionTypeStr 解决方案类型
      */
-    public floodProblem(int xNum, String solutionTypeStr) {
+    public FloodProblem(int xNum, String solutionTypeStr) {
         initData();
 
         setNumberOfVariables(xNum);
@@ -179,6 +179,9 @@ public class floodProblem extends AbstractDoubleProblem {
 
             if (Qout[i] > maxQ) {
                 cons += (Qout[i] - maxQ) / maxQ;
+
+
+
                 consNum = consNum + 1;
             } else if (Qout[i] < minQ) {
                 cons += (minQ - Qout[i]) / (maxQ - minQ);
