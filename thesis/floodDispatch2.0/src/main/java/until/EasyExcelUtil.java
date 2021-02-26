@@ -22,7 +22,7 @@ public class EasyExcelUtil {
      * @param sheetIndex
      * @return
      */
-    public static Double[][] readTable(String tableName, int sheetIndex){
+    public static double[][] readTable(String tableName, int sheetIndex){
 
         String bathPath = "data/baseData/";
         String endPath = ".xls";
@@ -45,7 +45,7 @@ public class EasyExcelUtil {
 
         Set<Integer> keySet=list.get(0).keySet();
 
-        Double[][] res=new Double[keySet.size()][list.size()];
+        double[][] res=new double[keySet.size()][list.size()];
         for (int i = 0; i < keySet.size(); i++) {
             for (int j = 0; j < list.size(); j++) {
                 res[i][j]=Double.valueOf(list.get(j).get(i));

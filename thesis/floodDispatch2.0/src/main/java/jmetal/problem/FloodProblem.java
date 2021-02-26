@@ -170,7 +170,7 @@ public class FloodProblem extends AbstractDoubleProblem {
             // 时段平均水位对应最大泄流能力
             double allQ = zallqFunc.value(Zup[i]);
 
-            // 处理流量约束；最大最小下泄流量约束
+            // 处理流量约束；最大流最小下泄量约束
             double controlQmax = 76000.0; // 当水位不超过171米时，下泄流量不超过55000
             if (Zup[i] <= 171.0) controlQmax = 55000; // 当水位超过171米后，下泄流量不超过76000
             double maxQ = Math.min(allQ, controlQmax); // 上限为泄流能力与要求的最大值
