@@ -330,6 +330,9 @@ public class FloodProProblem extends AbstractDoubleProblem {
                 double ZoutCapacityOfXLD = zOutCurveOfXLD.value(Zup[i]);
 
                 //处理流量约束，下泄量不能超过最大泄流约束
+                double maxQXLD = ZoutCapacityOfXLD;
+                double minQXLD = 0;
+
             }
 
 
