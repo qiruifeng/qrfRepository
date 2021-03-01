@@ -1,5 +1,6 @@
 package jmetal.problem;
 
+import com.sun.org.apache.regexp.internal.RE;
 import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import entity.Result;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
@@ -9,11 +10,10 @@ import org.uma.jmetal.problem.impl.AbstractDoubleProblem;
 import org.uma.jmetal.solution.DoubleSolution;
 import until.EasyExcelUtil;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import static until.CalculateUtil.doubleArrMax;
+import static until.CalculateUtil.getPingFangHe;
 import static until.Msjg.riverevolustion;
 
 public class FloodProProblem extends AbstractDoubleProblem {
@@ -55,7 +55,12 @@ public class FloodProProblem extends AbstractDoubleProblem {
         initData();
 
         setNumberOfVariables(xNum * stationNum);
-        setNumberOfObjectives(2);
+        if (stationNum == 1){
+            setNumberOfObjectives(2);
+        }else {
+            setNumberOfObjectives(3);
+        }
+
         setNumberOfConstraints(0);
         List<Double> lowerLimit = new ArrayList<>(getNumberOfVariables());
         List<Double> upperLimit = new ArrayList<>(getNumberOfVariables());
@@ -196,13 +201,21 @@ public class FloodProProblem extends AbstractDoubleProblem {
 
 
     //每个水库的演算过程，输入，水位过程即可；返回流量过程
-    private Result getQProcess(String stationName, double levelStart, double[] Qin, double[] Z) {
+
+    /**
+     * @param stationName 水库名的首字母大写
+     * @param levelStart  当前水库的起调水位
+     * @param Qin         当前水库的入流
+     * @param Z           当前水库的水位过程，决策变量
+     * @return 返回的Result这个类包括出库流量过程，新的水位过程，违反约束的位置和调整后的值
+     */
+    private Result getProcess(String stationName, double levelStart, double[] Qin, double[] Z) {
         int xNum = getNumberOfVariables() / this.stationNum;
 
         Result result = new Result();
 
         double[] Znew = new double[xNum];
-        Map<Integer,Double> map = new HashMap<>();
+        Map<Integer, Double> map = new HashMap<>();
 
         // 时段时长,单位：小时
         final int AvT = 24;
@@ -217,12 +230,12 @@ public class FloodProProblem extends AbstractDoubleProblem {
         // 时段流量变化量(m3/s),
         double[] detaQ = new double[xNum];
 
-        //上游水位插库容
-        PolynomialSplineFunction zvCurve = ZVCurvedOfStation.get(stationName);
-        //库容插水位
-        PolynomialSplineFunction vzCurve = VZCurvedOfStation.get(stationName);
-        //上游水位插最大下泄流量
-        PolynomialSplineFunction zOutCurve = ZOutQOfStation.get(stationName);
+//        //上游水位插库容
+//        PolynomialSplineFunction zvCurve = ZVCurvedOfStation.get(stationName);
+//        //库容插水位
+//        PolynomialSplineFunction vzCurve = VZCurvedOfStation.get(stationName);
+//        //上游水位插最大下泄流量
+//        PolynomialSplineFunction zOutCurve = ZOutQOfStation.get(stationName);
 
         for (int i = 0; i < xNum; i++) {
             if (i == 0) {
@@ -239,7 +252,7 @@ public class FloodProProblem extends AbstractDoubleProblem {
             detaQ[i] = detaV[i] * Math.pow(10, 8) / AvT / 3600;
 
             //时段下泄流量
-            Qout[i] = inQFromStation.get(stationName)[i] - detaQ[i];
+            Qout[i] = Qin[i] - detaQ[i];
 
             //处理流量约束,最大值为最大下泄流量
             double maxQ = ZOutQOfStation.get(stationName).value(Zup[i]);
@@ -250,15 +263,15 @@ public class FloodProProblem extends AbstractDoubleProblem {
                 detaV[i] = detaQ[i] * 3600 * AvT / Math.pow(10, 8);
                 V[i + 1] = detaV[i] + V[i];
                 Z[i] = VZCurvedOfStation.get("XLD").value(V[i + 1]);
-                map.put(i,Z[i]);
+                map.put(i, Z[i]);
             }
-            if (Qout[i] < minQ){
+            if (Qout[i] < minQ) {
                 Qout[i] = minQ;
                 detaQ[i] = inQFromStation.get("XLD")[i] - detaQ[i];
                 detaV[i] = detaQ[i] * 3600 * AvT / Math.pow(10, 8);
                 V[i + 1] = detaV[i] + V[i];
                 Z[i] = VZCurvedOfStation.get("XLD").value(V[i + 1]);
-                map.put(i,Z[i]);
+                map.put(i, Z[i]);
             }
             Znew[i] = Z[i];
         }
@@ -370,15 +383,7 @@ public class FloodProProblem extends AbstractDoubleProblem {
         }
 
         if (this.stationNum == 3) {//溪洛渡向家坝三峡
-            //记录超出约束的时段个数
-            int consNum = 0;
-
-            //记录一个超过约束的值
-            double cons = 0;
-
-            // 时段时长,单位：小时
-            final int AvT = 24;
-
+            //当三库时，决策变量的0-121是溪洛渡的水位，122-243是向家坝水位，244-365为三峡水位
             //各个水库的水位，决策变量
             double[] Zxld = new double[xNum];
             for (int i = 0; i < xNum; i++) {
@@ -393,35 +398,27 @@ public class FloodProProblem extends AbstractDoubleProblem {
                 Zsx[i] = solution.getVariableValue(xNum * 2 + i);
             }
 
-            // 水库平均水位,单位m
-            double[] ZupXLD = new double[xNum];
-            double[] ZupXJB = new double[xNum];
-            double[] ZupSX = new double[xNum];
+            //先算溪洛渡
+            Result resultXLD = getProcess("XLD", levelStart[0], inQFromStation.get("XLD"), Zxld);
+            double[] QoutXLD = resultXLD.getQout();
+            double[] ZnewXLD = resultXLD.getZnew();
+            Map<Integer, Double> changeDataXLD = resultXLD.getIntegerDoubleMap();
+            //遍历这个map设置种群
+            for (Map.Entry<Integer, Double> entry : changeDataXLD.entrySet()) {
+                solution.setVariableValue(entry.getKey(), entry.getValue());
+            }
 
-            // 各个时刻库容(10^8m3)
-            double[] Vxld = new double[xNum + 1];
-            double[] Vxjb = new double[xNum + 1];//溪洛渡
-            double[] Vsx = new double[xNum + 1];//溪洛渡
+            //再算向家坝,向家坝的入库就是溪洛渡的出库
+            Result resultXJB = getProcess("XJB", levelStart[1], QoutXLD, Zxjb);
+            double[] QoutXJB = resultXJB.getQout();
+            double[] ZnewXJB = resultXJB.getQout();
+            Map<Integer, Double> changeDataXJB = resultXJB.getIntegerDoubleMap();
+            //遍历这个map设置种群
+            for (Map.Entry<Integer, Double> entry : changeDataXLD.entrySet()) {
+                solution.setVariableValue(entry.getKey() + xNum, entry.getValue());
+            }
 
-
-            // 时段库容变化量(10^8m3)
-            double[] detaVXLD = new double[xNum];
-            double[] detaVXJB = new double[xNum];
-            double[] detaVSX = new double[xNum];
-
-
-            // 下泄流量(m3/s)
-            double[] QoutXLD = new double[xNum];
-            double[] QoutXJB = new double[xNum];
-            double[] QoutSX = new double[xNum];
-
-            // 时段流量变化量(m3/s),
-            double[] detaQXLD = new double[xNum];
-            double[] detaQXJB = new double[xNum];
-            double[] detaQSX = new double[xNum];
-
-
-            //先把溪洛渡的入流用马斯京根演进到三峡，求出向三区间的入流
+            //先用设计洪水把溪洛渡的入流用马斯京根演进到三峡，求出向三区间的入流
             double[] inQOfXLD = inQFromStation.get("XLD");
             double[] inQOfXJB = inQOfXLD;
             double[] inQOfSXFromMSJG = riverevolustion(46, 0.37, inQOfXJB, "日");
@@ -430,61 +427,30 @@ public class FloodProProblem extends AbstractDoubleProblem {
                 QUJIAN[i] = inQFromStation.get("SX")[i] - inQOfSXFromMSJG[i];
             }
 
-            //当三库时，决策变量的0-121是溪洛渡的水位，122-243是向家坝水位，244-365为三峡水位
-
-            //先算溪洛渡
-            //溪洛渡水位序列
-            Vxld[0] = ZVCurvedOfStation.get("XLD").value(levelStart[0]);
-            double ZXLDmax = Double.MIN_VALUE;//记录最高水位
-            double QXLDmax = Double.MIN_VALUE;//记录最大流量
+            //算到三峡时，入库就是向家坝出库演进到三峡的流量加上区间的流量
+            double[] MSJG = riverevolustion(46, 0.37, QoutXJB, "日");
+            double[] QinSX = new double[xNum];
             for (int i = 0; i < xNum; i++) {
-                if (i == 0) {
-                    ZupXLD[i] = (levelStart[0] + Zxld[i]) / 2;
-                } else {
-                    ZupXLD[i] = (Zxld[i] + Zxld[i - 1]) / 2;
-                }
-
-                //根据时刻的水位插出库容
-                Vxld[i + 1] = ZVCurvedOfStation.get("XLD").value(Zxld[i]);
-                //计算时段库容变化量
-                detaVXLD[i] = Vxld[i + 1] - Vxld[i];
-                // 计算时段流量变化量
-                detaQXLD[i] = detaVXLD[i] * Math.pow(10, 8) / AvT / 3600;
-
-                //时段下泄流量
-                QoutXLD[i] = inQFromStation.get("XLD")[i] - detaQXLD[i];
-                // 时段平均水位对应最大泄流能力
-                double ZoutCapacityOfXLD = ZOutQOfStation.get("XLD").value(ZupXLD[i]);
-
-                //处理流量约束，下泄量不能超过最大泄流约束,不能小于0；
-                double maxQXLD = ZoutCapacityOfXLD;
-                double minQXLD = 0;
-
-                if (QoutXLD[i] > maxQXLD) {
-                    QoutXLD[i] = maxQXLD;
-                    detaQXLD[i] = inQFromStation.get("XLD")[i] - detaQXLD[i];
-                    detaVXLD[i] = detaQXLD[i] * 3600 * AvT / Math.pow(10, 8);
-                    Vxld[i + 1] = detaVXLD[i] + Vxld[i];
-                    Zxld[i] = VZCurvedOfStation.get("XLD").value(Vxld[i + 1]);
-                    solution.setVariableValue(i, Zxld[i]);
-                }
-
-                if (QoutXLD[i] < minQXLD) {
-                    QoutXLD[i] = minQXLD;
-                    detaQXLD[i] = inQFromStation.get("XLD")[i] - detaQXLD[i];
-                    detaVXLD[i] = detaQXLD[i] * 3600 * AvT / Math.pow(10, 8);
-                    Vxld[i + 1] = detaVXLD[i] + Vxld[i];
-                    Zxld[i] = VZCurvedOfStation.get("XLD").value(Vxld[i + 1]);
-                    solution.setVariableValue(i, Zxld[i]);
-                }
-
-                if (QoutXLD[i] > QXLDmax) {
-                    QXLDmax = QoutXLD[i];
-                }
-                if (Zxld[i] > ZXLDmax) {
-                    ZXLDmax = Zxld[i];
-                }
+                QinSX[i] = MSJG[i] + QUJIAN[i];
             }
+            Result resultSX = getProcess("SX", levelStart[2], QinSX, Zsx);
+            double[] QoutSX = resultSX.getQout();
+            double[] ZnewSX = resultSX.getZnew();
+            Map<Integer, Double> changeDataSX = resultSX.getIntegerDoubleMap();
+            //遍历这个map设置种群
+            for (Map.Entry<Integer, Double> entry : changeDataSX.entrySet()) {
+                solution.setVariableValue(entry.getKey() + xNum * 2, entry.getValue());
+            }
+            //目标1，向家坝出库流量平方和最小
+            //目标2，三峡坝前最高水位最低
+            //目标3，三峡出库流量平方和最小
+            double object1=getPingFangHe(QoutXJB);
+            double object2=doubleArrMax(ZnewSX);
+            double object3 = getPingFangHe(QoutSX);
+            solution.setObjective(0,object1);
+            solution.setObjective(1,object2);
+            solution.setObjective(3,object3);
+
         }
 
 
