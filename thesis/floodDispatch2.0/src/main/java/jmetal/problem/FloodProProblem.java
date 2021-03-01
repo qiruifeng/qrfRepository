@@ -174,16 +174,18 @@ public class FloodProProblem extends AbstractDoubleProblem {
      */
     @Override
     public void evaluate(DoubleSolution solution) {
-        int xNum = getNumberOfVariables();
+        int xNum = getNumberOfVariables() / this.stationNum;
 
-        double[] Z = new double[xNum];//把水位当作决策变量
-        for (int i = 0; i < xNum; i++) {
-            Z[i] = solution.getVariableValue(i);
-        }
 
         if (this.stationNum == 1) {//三峡单库的情况
 
             //记录超出约束的时段个数
+
+            double[] Z = new double[xNum];//把水位当作决策变量
+            for (int i = 0; i < xNum; i++) {
+                Z[i] = solution.getVariableValue(i);
+            }
+
             int consNum = 0;
             //记录一个超过约束的值
             double cons = 0;
@@ -270,20 +272,47 @@ public class FloodProProblem extends AbstractDoubleProblem {
             // 时段时长,单位：小时
             final int AvT = 24;
 
-            // 水库平均水位,单位m
-            double[] Zup = new double[xNum];
+            //各个水库的水位，决策变量
+            double[] Zxld = new double[xNum];
+            for (int i = 0; i < xNum; i++) {
+                Zxld[i] = solution.getVariableValue(i);
+            }
+            double[] Zxjb = new double[xNum];
+            for (int i = 0; i < xNum; i++) {
+                Zxjb[i] = solution.getVariableValue(xNum + i);
+            }
+            double[] Zsx = new double[xNum];
+            for (int i = 0; i < xNum; i++) {
+                Zsx[i] = solution.getVariableValue(xNum * 2 + i);
+            }
 
-            // 时刻库容(10^8m3)
-            double[] V = new double[xNum + 1];
+            // 水库平均水位,单位m
+            double[] ZupXLD = new double[xNum];
+            double[] ZupXJB = new double[xNum];
+            double[] ZupSX = new double[xNum];
+
+            // 各个时刻库容(10^8m3)
+            double[] Vxld = new double[xNum + 1];
+            double[] Vxjb = new double[xNum + 1];//溪洛渡
+            double[] Vsx = new double[xNum + 1];//溪洛渡
+
 
             // 时段库容变化量(10^8m3)
-            double[] detaV = new double[xNum];
+            double[] detaVXLD = new double[xNum];
+            double[] detaVXJB = new double[xNum];
+            double[] detaVSX = new double[xNum];
+
 
             // 下泄流量(m3/s)
-            double[] Qout = new double[xNum];
+            double[] QoutXLD = new double[xNum];
+            double[] QoutXJB = new double[xNum];
+            double[] QoutSX = new double[xNum];
 
             // 时段流量变化量(m3/s),
-            double[] detaQ = new double[xNum];
+            double[] detaQXLD = new double[xNum];
+            double[] detaQXJB = new double[xNum];
+            double[] detaQSX = new double[xNum];
+
 
             SplineInterpolator splineInterpolator = new SplineInterpolator();//样条差值
 
@@ -300,38 +329,49 @@ public class FloodProProblem extends AbstractDoubleProblem {
 
             //先算溪洛渡
             //溪洛渡水位序列
-            double[] Vxld = new double[xNum / this.stationNum + 1];
+
 
             // 上游水位插库容
             PolynomialSplineFunction zvCurveOfXLD = splineInterpolator.interpolate(ZVCurvedOfStation.get("XLD")[0], ZVCurvedOfStation.get("XLD")[1]);
+            PolynomialSplineFunction zvCurveOfXJB = splineInterpolator.interpolate(ZVCurvedOfStation.get("XJB")[0], ZVCurvedOfStation.get("XJB")[1]);
+            PolynomialSplineFunction zvCurveOfSX = splineInterpolator.interpolate(ZVCurvedOfStation.get("SX")[0], ZVCurvedOfStation.get("SX")[1]);
+
             // 上游水位插最大下泄流量
             PolynomialSplineFunction zOutCurveOfXLD = splineInterpolator.interpolate(ZOutQOfStation.get("XLD")[0], ZVCurvedOfStation.get("XLD")[1]);
+            PolynomialSplineFunction zOutCurveOfXJB = splineInterpolator.interpolate(ZOutQOfStation.get("XJB")[0], ZVCurvedOfStation.get("XJB")[1]);
+            PolynomialSplineFunction zOutCurveOfSX = splineInterpolator.interpolate(ZOutQOfStation.get("SX")[0], ZVCurvedOfStation.get("SX")[1]);
 
             Vxld[0] = zvCurveOfXLD.value(levelStart[0]);
             double ZXLDmax = 0.0;//记录最高水位
             double QXLDMAX = 0.0;//记录最大流量
-            for (int i = 0; i < 122; i++) {
+            for (int i = 0; i < xNum; i++) {
                 if (i == 0) {
-                    Zup[i] = (levelStart[0] + Z[i]) / 2;
+                    ZupXLD[i] = (levelStart[0] + Zxld[i]) / 2;
                 } else {
-                    Zup[i] = (Z[i] + Z[i - 1]) / 2;
+                    ZupXLD[i] = (Zxld[i] + Zxld[i - 1]) / 2;
                 }
 
                 //根据时刻的水位插出库容
-                V[i + 1] = zvCurveOfXLD.value(Z[i]);
+                Vxld[i + 1] = zvCurveOfXLD.value(Zxld[i]);
                 //计算时段库容变化量
-                detaV[i] = V[i + 1] - V[i];
+                detaVXLD[i] = Vxld[i + 1] - Vxld[i];
                 // 计算时段流量变化量
-                detaQ[i] = detaV[i] * Math.pow(10, 8) / AvT / 3600;
+                detaQXLD[i] = detaVXLD[i] * Math.pow(10, 8) / AvT / 3600;
 
                 //时段下泄流量
-                Qout[i] = inQFromStation.get("XLD")[i] - detaQ[i];
+                QoutXLD[i] = inQFromStation.get("XLD")[i] - detaQXLD[i];
                 // 时段平均水位对应最大泄流能力
-                double ZoutCapacityOfXLD = zOutCurveOfXLD.value(Zup[i]);
+                double ZoutCapacityOfXLD = zOutCurveOfXLD.value(ZupXLD[i]);
 
                 //处理流量约束，下泄量不能超过最大泄流约束
                 double maxQXLD = ZoutCapacityOfXLD;
                 double minQXLD = 0;
+
+                while (QoutXLD[i] > maxQXLD) {
+                    QoutXLD[i] = maxQXLD;
+                    detaQXLD[i] = inQFromStation.get("XLD")[i] -detaQXLD[i];
+
+                }
 
             }
 
