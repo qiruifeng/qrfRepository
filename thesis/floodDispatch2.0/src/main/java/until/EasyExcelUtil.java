@@ -10,50 +10,48 @@ public class EasyExcelUtil {
 
 
     public static void main(String[] args) {
-        readTable("1三峡基本特性曲线",1);
+        readTable("1三峡基本特性曲线", 1);
         System.out.println("over");
     }
 
     //读取文件
 
     /**
-     *
      * @param tableName
      * @param sheetIndex
      * @return
      */
-    public static double[][] readTable(String tableName, int sheetIndex){
+    public static double[][] readTable(String tableName, int sheetIndex) {
 
         String bathPath = "data/baseData/";
         String endPath = ".xls";
 
-        List<Map<Integer,String>> list=new LinkedList<>();
-        EasyExcel.read(bathPath+tableName+endPath)
-        .sheet(sheetIndex)
-        .registerReadListener(new AnalysisEventListener<HashMap<Integer,String>>() {//这个里面指定什么样的泛型，就出来什么样的数据
+        List<Map<Integer, String>> list = new LinkedList<>();
+        EasyExcel.read(bathPath + tableName + endPath)
+                .sheet(sheetIndex)
+                .registerReadListener(new AnalysisEventListener<HashMap<Integer, String>>() {//这个里面指定什么样的泛型，就出来什么样的数据
 
-            @Override
-            public void invoke(HashMap<Integer,String> data, AnalysisContext context) {
-                list.add(data);
-            }
+                    @Override
+                    public void invoke(HashMap<Integer, String> data, AnalysisContext context) {
+                        list.add(data);
+                    }
 
-            @Override
-            public void doAfterAllAnalysed(AnalysisContext context) {
-                System.out.println("end");
-            }
-        }).doRead();
+                    @Override
+                    public void doAfterAllAnalysed(AnalysisContext context) {
 
-        Set<Integer> keySet=list.get(0).keySet();
+                    }
+                }).doRead();
 
-        double[][] res=new double[keySet.size()][list.size()];
+        Set<Integer> keySet = list.get(0).keySet();
+
+        double[][] res = new double[keySet.size()][list.size()];
         for (int i = 0; i < keySet.size(); i++) {
             for (int j = 0; j < list.size(); j++) {
-                res[i][j]=Double.valueOf(list.get(j).get(i));
+                res[i][j] = Double.valueOf(list.get(j).get(i));
             }
         }
         return res;
     }
-
 
 
 }

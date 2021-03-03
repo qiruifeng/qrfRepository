@@ -55,9 +55,9 @@ public class FloodProProblem extends AbstractDoubleProblem {
         initData();
 
         setNumberOfVariables(xNum * stationNum);
-        if (stationNum == 1){
+        if (stationNum == 1) {
             setNumberOfObjectives(2);
-        }else {
+        } else {
             setNumberOfObjectives(3);
         }
 
@@ -135,17 +135,17 @@ public class FloodProProblem extends AbstractDoubleProblem {
                 PolynomialSplineFunction ZOutCapacityOfBHT = splineInterpolator.interpolate(ZOutCapacityOfbht[0], ZOutCapacityOfbht[1]);
                 this.ZOutQOfStation.put("BHT", ZOutCapacityOfBHT);
             case 3:
-                double[][] ZVCurvedOfxld = EasyExcelUtil.readTable("1溪洛渡基本特性曲线", 0);
+                double[][] ZVCurvedOfxld = EasyExcelUtil.readTable("2溪洛渡基本特征曲线", 0);
                 PolynomialSplineFunction ZVCurvedOfXLD = splineInterpolator.interpolate(ZVCurvedOfxld[0], ZVCurvedOfxld[1]);
                 PolynomialSplineFunction VZCurvedOfXLD = splineInterpolator.interpolate(ZVCurvedOfxld[1], ZVCurvedOfxld[0]);
                 this.ZVCurvedOfStation.put("XLD", ZVCurvedOfXLD);
                 this.VZCurvedOfStation.put("XLD", VZCurvedOfXLD);
 
-                double[][] ZVCurvedOfxjb = EasyExcelUtil.readTable("1向家坝基本特性曲线", 0);
+                double[][] ZVCurvedOfxjb = EasyExcelUtil.readTable("3向家坝基本特征曲线", 0);
                 PolynomialSplineFunction ZVCurvedOfXJB = splineInterpolator.interpolate(ZVCurvedOfxjb[0], ZVCurvedOfxjb[1]);
                 PolynomialSplineFunction VZCurvedOfXJB = splineInterpolator.interpolate(ZVCurvedOfxjb[1], ZVCurvedOfxjb[0]);
                 this.ZVCurvedOfStation.put("XJB", ZVCurvedOfXJB);
-                this.ZVCurvedOfStation.put("XJB", VZCurvedOfXJB);
+                this.VZCurvedOfStation.put("XJB", VZCurvedOfXJB);
 
                 double[][] ZOutCapacityOfxld = EasyExcelUtil.readTable("泄流能力曲线", 1);
                 PolynomialSplineFunction ZOutCapacityOfXLD = splineInterpolator.interpolate(ZOutCapacityOfxld[0], ZOutCapacityOfxld[1]);
@@ -174,19 +174,24 @@ public class FloodProProblem extends AbstractDoubleProblem {
 
         //模型输入
         switch (this.stationNum) {
-            case 1:
+            case 1: {
                 double[][] inQFromSXOrigin = EasyExcelUtil.readTable("入库数据", 0);
                 double[] inQFromSX = inQFromSXOrigin[2];
                 this.inQFromStation.put("SX", inQFromSX);
                 break;
-            case 3:
+            }
+            case 3: {
                 double[][] inQFromXLDOrigin = EasyExcelUtil.readTable("入库数据", 1);
+                double[][] inQFromSXOrigin = EasyExcelUtil.readTable("入库数据", 0);
+
                 double[] inQFromXLD = inQFromXLDOrigin[2];
-                double[][] inQFromQUJIAN3Origin = EasyExcelUtil.readTable("入库数据", 3);
-                double[] inQFromQUJIAN3 = inQFromQUJIAN3Origin[0];
+                double[] inQFromSX = inQFromSXOrigin[2];
+
                 this.inQFromStation.put("XLD", inQFromXLD);
-                this.inQFromStation.put("QUJIAN3", inQFromQUJIAN3);
+                this.inQFromStation.put("SX", inQFromSX);
                 break;
+            }
+
             case 5:
 //                Double[][] inQFromWDDOrigin = EasyExcelUtil.readTable("入库数据",0);
 //                Double[][] inQFromQUJIAN5Origin = EasyExcelUtil.readTable("入库数据",0);
@@ -237,6 +242,8 @@ public class FloodProProblem extends AbstractDoubleProblem {
 //        //上游水位插最大下泄流量
 //        PolynomialSplineFunction zOutCurve = ZOutQOfStation.get(stationName);
 
+        V[0] = ZVCurvedOfStation.get(stationName).value(levelStart);
+
         for (int i = 0; i < xNum; i++) {
             if (i == 0) {
                 Zup[i] = (levelStart + Z[i]) / 2;
@@ -259,18 +266,18 @@ public class FloodProProblem extends AbstractDoubleProblem {
             double minQ = 0.0;
             if (Qout[i] > maxQ) {
                 Qout[i] = maxQ;
-                detaQ[i] = inQFromStation.get("XLD")[i] - detaQ[i];
+                detaQ[i] = Qin[i] - Qout[i];
                 detaV[i] = detaQ[i] * 3600 * AvT / Math.pow(10, 8);
                 V[i + 1] = detaV[i] + V[i];
-                Z[i] = VZCurvedOfStation.get("XLD").value(V[i + 1]);
+                Z[i] = VZCurvedOfStation.get(stationName).value(V[i + 1]);
                 map.put(i, Z[i]);
             }
             if (Qout[i] < minQ) {
                 Qout[i] = minQ;
-                detaQ[i] = inQFromStation.get("XLD")[i] - detaQ[i];
+                detaQ[i] = Qin[i] - Qout[i];
                 detaV[i] = detaQ[i] * 3600 * AvT / Math.pow(10, 8);
                 V[i + 1] = detaV[i] + V[i];
-                Z[i] = VZCurvedOfStation.get("XLD").value(V[i + 1]);
+                Z[i] = VZCurvedOfStation.get(stationName).value(V[i + 1]);
                 map.put(i, Z[i]);
             }
             Znew[i] = Z[i];
@@ -444,12 +451,12 @@ public class FloodProProblem extends AbstractDoubleProblem {
             //目标1，向家坝出库流量平方和最小
             //目标2，三峡坝前最高水位最低
             //目标3，三峡出库流量平方和最小
-            double object1=getPingFangHe(QoutXJB);
-            double object2=doubleArrMax(ZnewSX);
+            double object1 = getPingFangHe(QoutXJB);
+            double object2 = doubleArrMax(ZnewSX);
             double object3 = getPingFangHe(QoutSX);
-            solution.setObjective(0,object1);
-            solution.setObjective(1,object2);
-            solution.setObjective(3,object3);
+            solution.setObjective(0, object1);
+            solution.setObjective(1, object2);
+            solution.setObjective(2, object3);
 
         }
 
