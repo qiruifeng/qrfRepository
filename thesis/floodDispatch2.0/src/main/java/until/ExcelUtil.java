@@ -68,7 +68,6 @@ public class ExcelUtil {
         // 为表头赋值
         // HSSFCell cell=row.createCell((short)0);
         for (int i = 0; i < tableHead.size(); i++) {
-            System.out.println(i);
             row.createCell(i).setCellValue(tableHead.get(i));
             row.getCell(i).setCellStyle(style);
             rowD.createCell(i).setCellValue(tableHeadDimension.get(i));
@@ -180,7 +179,6 @@ public class ExcelUtil {
         // 为表头赋值
         // HSSFCell cell=row.createCell((short)0);
         for (int i = 0; i < tableHead.size(); i++) {
-            System.out.println(i);
             row.createCell(i).setCellValue(tableHead.get(i));
             row.getCell(i).setCellStyle(style);
             rowD.createCell(i).setCellValue(tableHeadDimension.get(i));

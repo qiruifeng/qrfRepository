@@ -21,6 +21,7 @@ import until.ExcelUtil;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class FloodProNSGAIIRunner extends AbstractAlgorithmRunner {
@@ -31,8 +32,10 @@ public class FloodProNSGAIIRunner extends AbstractAlgorithmRunner {
         MutationOperator<DoubleSolution> mutation;
         SelectionOperator<List<DoubleSolution>, DoubleSolution> selection;
         String problemName = "floodProThreeStation";
-        double[] levelStart = {570.0, 370.0, 145.0};
-        problem = new FloodProProblem(122, 3, levelStart);
+        double[] levelStart = {570.0, 370.0, 145.0};//三个库的起调水位
+        HashMap<String,Double> reserveStorageCapacity = new HashMap<>();
+        reserveStorageCapacity.put("XX",32.0);
+        problem = new FloodProProblem(122, 3, levelStart,reserveStorageCapacity);
 
         double crossoverProbability = 0.9;
         double crossoverDistributionIndex = 20.0;
@@ -78,7 +81,7 @@ public class FloodProNSGAIIRunner extends AbstractAlgorithmRunner {
 
         //保存结果
         String basePath = "data/result/" + problemName + "/";
-        boolean flag = ExcelUtil.exportExcelXLSX(population, "非劣前沿结果", tableHead, tableHeadDimension, basePath + problemName + "NSGAII.xls");
+        boolean flag = ExcelUtil.exportExcelXLSX(population, "非劣前沿结果", tableHead, tableHeadDimension, basePath + problemName + "NSGAII.xlsx");
         if (flag) {
             System.out.println("保存文件成功！");
         } else {

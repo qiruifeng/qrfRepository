@@ -1,11 +1,8 @@
 package jmetal.problem;
 
-import com.sun.org.apache.regexp.internal.RE;
-import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import entity.Result;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
-import org.omg.PortableInterceptor.INACTIVE;
 import org.uma.jmetal.problem.impl.AbstractDoubleProblem;
 import org.uma.jmetal.solution.DoubleSolution;
 import until.EasyExcelUtil;
@@ -21,7 +18,7 @@ public class FloodProProblem extends AbstractDoubleProblem {
     private static final long serialVersionUID = 1L;
 
     //约束
-    private HashMap<String, double[]> constraints;//目前考虑的：时段的水库约束
+    private HashMap<String, Double> constraints = new HashMap<>();//目前考虑的:梯级预留库容的约束，给一个总量；String值为XX(溪向)，WBXX(乌白溪向)
     //水库个数，单库或者3库或者5库
     private int stationNum;
     //对应控制站点的流量,K-站点名称，V-流量数组
@@ -48,12 +45,13 @@ public class FloodProProblem extends AbstractDoubleProblem {
      * @param stationNum 水库个数
      * @param levelStart 每个水库的起调水位，按照乌白溪向三排列
      */
-    public FloodProProblem(int xNum, int stationNum, double[] levelStart) {
+    public FloodProProblem(int xNum, int stationNum, double[] levelStart, HashMap<String, Double> constraints) {
 
         this.stationNum = stationNum;
         this.levelStart = levelStart;
+        this.constraints = constraints;
         initData();
-
+        System.out.println(constraints.get("sss"));
         setNumberOfVariables(xNum * stationNum);
         if (stationNum == 1) {
             setNumberOfObjectives(2);
@@ -208,12 +206,16 @@ public class FloodProProblem extends AbstractDoubleProblem {
     //每个水库的演算过程，输入，水位过程即可；返回流量过程
 
     /**
-     * @param stationName 水库名的首字母大写
-     * @param levelStart  当前水库的起调水位
-     * @param Qin         当前水库的入流
-     * @param Z           当前水库的水位过程，决策变量
+     * @param stationName    水库名的首字母大写
+     * @param levelStart     当前水库的起调水位
+     * @param Qin            当前水库的入流
+     * @param Z              当前水库的水位过程，决策变量
+     * @param ZPre           当前水库前一个水库的水位过程
+     * @param reserveStorage 预留库容约束
      * @return 返回的Result这个类包括出库流量过程，新的水位过程，违反约束的位置和调整后的值
      */
+
+    // private Result getProcess(String stationName, double levelStart, double[] Qin, double[] Z, double[] ZPre, double reserveStorage) {
     private Result getProcess(String stationName, double levelStart, double[] Qin, double[] Z) {
         int xNum = getNumberOfVariables() / this.stationNum;
 
@@ -421,7 +423,7 @@ public class FloodProProblem extends AbstractDoubleProblem {
             double[] ZnewXJB = resultXJB.getQout();
             Map<Integer, Double> changeDataXJB = resultXJB.getIntegerDoubleMap();
             //遍历这个map设置种群
-            for (Map.Entry<Integer, Double> entry : changeDataXLD.entrySet()) {
+            for (Map.Entry<Integer, Double> entry : changeDataXJB.entrySet()) {
                 solution.setVariableValue(entry.getKey() + xNum, entry.getValue());
             }
 

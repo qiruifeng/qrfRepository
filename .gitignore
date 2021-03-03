@@ -3,6 +3,7 @@
 vcs.xml
 out/
 *.xls
+*.xlsx
 target/
 *.cmd
 *.log
