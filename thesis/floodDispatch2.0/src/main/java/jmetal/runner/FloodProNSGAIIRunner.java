@@ -33,9 +33,9 @@ public class FloodProNSGAIIRunner extends AbstractAlgorithmRunner {
         SelectionOperator<List<DoubleSolution>, DoubleSolution> selection;
         String problemName = "floodProThreeStation";
         double[] levelStart = {570.0, 370.0, 145.0};//三个库的起调水位
-        HashMap<String,Double> reserveStorageCapacity = new HashMap<>();
-        reserveStorageCapacity.put("XX",32.0);
-        problem = new FloodProProblem(122, 3, levelStart,reserveStorageCapacity);
+        HashMap<String, Double> reserveStorageCapacity = new HashMap<>();
+        reserveStorageCapacity.put("XX", 32.0);
+        problem = new FloodProProblem(122, 3, levelStart, reserveStorageCapacity);
 
         double crossoverProbability = 0.9;
         double crossoverDistributionIndex = 20.0;
