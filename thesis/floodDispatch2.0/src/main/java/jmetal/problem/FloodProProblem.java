@@ -98,11 +98,11 @@ public class FloodProProblem extends AbstractDoubleProblem {
 
         }
 
-        for (int i = period[0]; i <= period[1]; i++) {
-            upperLimit.set(i, constrains.get("XLD"));//设置溪洛渡的水位上限
-            upperLimit.set(i + xNum, constrains.get("XJB"));//设置向家坝的水位上限
-
-        }
+//        for (int i = period[0]; i <= period[1]; i++) {
+//            upperLimit.set(i, constrains.get("XLD"));//设置溪洛渡的水位上限
+//            upperLimit.set(i + xNum, constrains.get("XJB"));//设置向家坝的水位上限
+//
+//        }
 
 
         System.out.println("upperLimit:" + upperLimit);

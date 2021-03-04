@@ -66,7 +66,7 @@ public class FloodProNSGAIIRunner extends AbstractAlgorithmRunner {
             // N元锦标赛选择，传入比较器
             selection = new BinaryTournamentSelection<DoubleSolution>(new RankingAndCrowdingDistanceComparator<DoubleSolution>());
 
-            algorithm = new NSGAII45<DoubleSolution>(problem, 100, 50, crossover, mutation,
+            algorithm = new NSGAII45<DoubleSolution>(problem, 50000, 50000, crossover, mutation,
                     selection, new SequentialSolutionListEvaluator<DoubleSolution>());
 
 
@@ -99,6 +99,8 @@ public class FloodProNSGAIIRunner extends AbstractAlgorithmRunner {
             } else {
                 System.out.println("保存文件失败！");
             }
+
+            break;
         }
     }
 
