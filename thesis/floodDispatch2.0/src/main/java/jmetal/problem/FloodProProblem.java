@@ -17,8 +17,10 @@ public class FloodProProblem extends AbstractDoubleProblem {
 
     private static final long serialVersionUID = 1L;
 
-    //约束
-    private HashMap<String, Double> constraints = new HashMap<>();//目前考虑的:梯级预留库容的约束，给一个总量；String值为XX(溪向)，WBXX(乌白溪向)
+    //库容约束转化成的水位上限值，String是水库，Double[]是水位上限序列
+    private HashMap<String, Double> constrains = new HashMap<>();//目前考虑的:梯级预留库容的约束，给一个总量；String值为XX(溪向)，WBXX(乌白溪向)
+    //库容约束的时段
+    private int[] period;
     //水库个数，单库或者3库或者5库
     private int stationNum;
     //对应控制站点的流量,K-站点名称，V-流量数组
@@ -44,14 +46,14 @@ public class FloodProProblem extends AbstractDoubleProblem {
      * @param xNum       时段个数
      * @param stationNum 水库个数
      * @param levelStart 每个水库的起调水位，按照乌白溪向三排列
+     * @param period
      */
-    public FloodProProblem(int xNum, int stationNum, double[] levelStart, HashMap<String, Double> constraints) {
+    public FloodProProblem(int xNum, int stationNum, double[] levelStart, HashMap<String, Double> constrains, int[] period) {
 
         this.stationNum = stationNum;
         this.levelStart = levelStart;
-        this.constraints = constraints;
+        this.constrains = constrains;
         initData();
-        System.out.println(constraints.get("sss"));
         setNumberOfVariables(xNum * stationNum);
         if (stationNum == 1) {
             setNumberOfObjectives(2);
@@ -95,6 +97,13 @@ public class FloodProProblem extends AbstractDoubleProblem {
                 System.out.println("水库个数只能是1，3，5");
 
         }
+
+        for (int i = period[0]; i <= period[1]; i++) {
+            upperLimit.set(i, constrains.get("XLD"));//设置溪洛渡的水位上限
+            upperLimit.set(i + xNum, constrains.get("XJB"));//设置向家坝的水位上限
+
+        }
+
 
         System.out.println("upperLimit:" + upperLimit);
         System.out.println("lowerLimit:" + lowerLimit);
@@ -206,12 +215,10 @@ public class FloodProProblem extends AbstractDoubleProblem {
     //每个水库的演算过程，输入，水位过程即可；返回流量过程
 
     /**
-     * @param stationName    水库名的首字母大写
-     * @param levelStart     当前水库的起调水位
-     * @param Qin            当前水库的入流
-     * @param Z              当前水库的水位过程，决策变量
-     * @param ZPre           当前水库前一个水库的水位过程
-     * @param reserveStorage 预留库容约束
+     * @param stationName 水库名的首字母大写
+     * @param levelStart  当前水库的起调水位
+     * @param Qin         当前水库的入流
+     * @param Z           当前水库的水位过程，决策变量
      * @return 返回的Result这个类包括出库流量过程，新的水位过程，违反约束的位置和调整后的值
      */
 
