@@ -21,7 +21,9 @@ public class FloodProMaxProblem extends AbstractDoubleProblem implements Constra
     private static final long serialVersionUID = 1L;
 
     //库容约束，直接给一个溪向预留库容
-    private double constrains;//目前考虑的:梯级预留库容的约束，给一个总量；String值为XX(溪向)，WBXX(乌白溪向)
+    private double reserveStorage;//目前考虑的:梯级预留库容的约束，给一个总量；String值为XX(溪向)，WBXX(乌白溪向)
+    //整个调度时段
+    private int[] T;
     //库容约束的时段
     private int[] period;
     //水库个数，单库或者3库或者5库
@@ -50,11 +52,14 @@ public class FloodProMaxProblem extends AbstractDoubleProblem implements Constra
      * @param levelStart 每个水库的起调水位，按照乌白溪向三排列
      * @param period
      */
-    public FloodProMaxProblem(int xNum, int stationNum, double[] levelStart, double constrains, int[] period) {
+    public FloodProMaxProblem(int xNum, int stationNum, double[] levelStart, int[] T, double reserveStorage, int[] period) {
 
         this.stationNum = stationNum;
         this.levelStart = levelStart;
-        this.constrains = constrains;
+        this.T = T;
+        this.reserveStorage = reserveStorage;
+        this.period = period;
+
         initData();
         setNumberOfVariables(xNum * stationNum);
         if (stationNum == 1) {
@@ -64,7 +69,7 @@ public class FloodProMaxProblem extends AbstractDoubleProblem implements Constra
         }
 
         //设置约束。前面一段表示水位变幅约束，后面一段表示库容约束
-        setNumberOfConstraints(getNumberOfVariables() - 1 + this.period.length + 1);
+        setNumberOfConstraints(getNumberOfVariables() + period[1] - period[0] + 1);
 
         List<Double> lowerLimit = new ArrayList<>(getNumberOfVariables());
         List<Double> upperLimit = new ArrayList<>(getNumberOfVariables());
@@ -272,9 +277,10 @@ public class FloodProMaxProblem extends AbstractDoubleProblem implements Constra
             //目标1，向家坝出库流量平方和最小
             //目标2，三峡坝前最高水位最低
             //目标3，三峡出库流量平方和最小
-            double object1 = getPingFangHe(QoutXJB);
-            double object2 = doubleArrMax(ZnewSX);
-            double object3 = getPingFangHe(QoutSX);
+//            double object1 = getPingFangHe(QoutXJB);//溪洛渡出库流量平方和最小
+            double object1 = doubleArrMax(ZnewXLD);//溪洛渡最高水位最低
+            double object2 = doubleArrMax(ZnewSX);//三峡最高水位最低
+            double object3 = getPingFangHe(QoutSX);//三峡出库流量平方和最小
             solution.setObjective(0, object1);
             solution.setObjective(1, object2);
             solution.setObjective(2, object3);
@@ -289,22 +295,62 @@ public class FloodProMaxProblem extends AbstractDoubleProblem implements Constra
 
         int xNum = solution.getNumberOfVariables() / this.stationNum;
 
-        double[] V = new double[solution.getNumberOfVariables()];
+        double[] Z = new double[solution.getNumberOfVariables()];
         double[] constraint = new double[getNumberOfConstraints()];
         for (int i = 0; i < solution.getNumberOfVariables(); i++) {
-            V[i] = solution.getVariableValue(i);
+            Z[i] = solution.getVariableValue(i);
         }
 
-//        double
-
-
-        //每个水库的水位变幅约束
+        //每个水库的水位变幅约束[5,4,5]
         for (int i = 0; i < xNum; i++) {
-            if (i==0){
-               constraint[i] = this.levelStart[0];
+            if (i == 0) {
+                constraint[i] = 5 - Math.abs(this.levelStart[0] - Z[0]);//XLD
+                constraint[i + xNum] = 4 - Math.abs(this.levelStart[1] - Z[0 + xNum]);
+                constraint[i + 2 * xNum] = 5 - Math.abs(this.levelStart[2] - Z[0 + 2 * xNum]);
+            } else {
+                constraint[i] = 5 - Math.abs(Z[i] - Z[i - 1]);
+                constraint[i + xNum] = 4 - Math.abs(Z[i + xNum] - Z[i - 1 + xNum]);
+                constraint[i + 2 * xNum] = 5 - Math.abs(Z[i + 2 * xNum] - Z[i - 1 + 2 * xNum]);
             }
         }
 
+        double Z_XLD = 0.0;//xld目前水位
+        double V_XLD = 0.0;//xld目前库容
+        double V_XLD_left = 0.0;//xld剩余库容
+        double V_XLD_FHG = ZVCurvedOfStation.get("XLD").value(600.0);//xld防洪高对应库容
+
+        double Z_XJB = 0.0;//XJB目前水位
+        double V_XJB = 0.0;//XJB目前库容
+        double V_XJB_left = 0.0;//XJB剩余库容
+        double V_XJB_FHG = ZVCurvedOfStation.get("XJB").value(370.0);//XJB防洪高对应库容
+
+
+        //预留防洪库容约束
+        for (int i = 3 * xNum; i < getNumberOfConstraints(); i++) {
+            Z_XLD = Z[period[0] - T[0] + (i - 3 * xNum)];
+            V_XLD = ZVCurvedOfStation.get("XLD").value(Z_XLD);
+            V_XLD_left = V_XLD_FHG - V_XLD;
+
+            Z_XJB = Z[period[0] - T[0] + (i - 3 * xNum) + xNum];
+            V_XJB = ZVCurvedOfStation.get("XJB").value(Z_XJB);
+            V_XJB_left = V_XJB_FHG - V_XJB;
+
+            constraint[i] = reserveStorage - (V_XLD_left + V_XJB_left);
+
+        }
+
+        //处理超约束情况
+        double overallConstraintViolation = 0.0;
+        int violatedConstraints = 0;
+        for (int i = 0; i < 3 * getNumberOfConstraints(); i++) {
+            if (constraint[i] < 0.0) {
+                overallConstraintViolation += constraint[i];
+                violatedConstraints++;
+            }
+        }
+
+        overallConstraintViolationDegree.setAttribute(solution, overallConstraintViolation);
+        numberOfViolatedConstraints.setAttribute(solution, violatedConstraints);
 
     }
 
@@ -379,13 +425,13 @@ public class FloodProMaxProblem extends AbstractDoubleProblem implements Constra
         //模型输入
         switch (this.stationNum) {
             case 1: {
-                double[][] inQFromSXOrigin = EasyExcelUtil.readTable("入库数据", 0);
+                double[][] inQFromSXOrigin = EasyExcelUtil.readTable("入库数据", 0, T[0], T[1]);
                 double[] inQFromSX = inQFromSXOrigin[2];
                 this.inQFromStation.put("SX", inQFromSX);
                 break;
             }
             case 3: {
-                double[][] inQFromXLDOrigin = EasyExcelUtil.readTable("入库数据", 1);
+                double[][] inQFromXLDOrigin = EasyExcelUtil.readTable("入库数据", 1, T[0], T[1]);
                 double[][] inQFromSXOrigin = EasyExcelUtil.readTable("入库数据", 0);
 
                 double[] inQFromXLD = inQFromXLDOrigin[2];

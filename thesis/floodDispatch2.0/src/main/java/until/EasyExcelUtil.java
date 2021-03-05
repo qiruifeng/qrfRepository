@@ -10,7 +10,8 @@ public class EasyExcelUtil {
 
 
     public static void main(String[] args) {
-        readTable("1三峡基本特性曲线", 1);
+        System.out.println("start");
+        double[][] test = readTable("入库数据",0,2,8);
         System.out.println("over");
     }
 
@@ -53,5 +54,16 @@ public class EasyExcelUtil {
         return res;
     }
 
+    public static double[][] readTable(String tableName, int sheetIndex, int rowStart, int rowEnd) {
+        double[][] origin = readTable(tableName, sheetIndex);
+        double[][] ans = new double[origin.length][rowEnd - rowStart + 1];
+
+        for (int i = 0; i < ans.length; i++) {
+            for (int j = rowStart - 2; j < rowEnd - 1; j++) {
+                ans[i][j - (rowStart - 2)] = origin[i][j];
+            }
+        }
+        return ans;
+    }
 
 }

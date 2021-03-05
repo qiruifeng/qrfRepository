@@ -44,6 +44,7 @@ public class FloodProNSGAIIRunner extends AbstractAlgorithmRunner {
         int[] levelMaxMin = {588, 593};
         levelCombination = getLevelCombination(reserveStorage, 3, "XLD", levelMaxMin, 1);
 
+
         int[] period = {88, 100};
 
 
