@@ -49,7 +49,7 @@ public class FloodProMaxPlusProblemRunner {
         selection = new BinaryTournamentSelection<DoubleSolution>(new RankingAndCrowdingDistanceComparator<DoubleSolution>());
 
 
-        algorithm = new NSGAII45<DoubleSolution>(problem, 10000, 1000, crossover, mutation,
+        algorithm = new NSGAII45<DoubleSolution>(problem, 10000, 10000, crossover, mutation,
                 selection, new SequentialSolutionListEvaluator<DoubleSolution>());
 
 
