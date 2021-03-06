@@ -2,8 +2,9 @@
 *.iml
 vcs.xml
 out/
+LongTermDispatchsx/
+fanghaowen/
 *.xls
-*.xlsx
 target/
 *.cmd
 *.log

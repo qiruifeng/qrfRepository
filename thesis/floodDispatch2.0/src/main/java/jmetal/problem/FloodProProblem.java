@@ -9,7 +9,7 @@ import until.EasyExcelUtil;
 
 import java.util.*;
 
-import static until.CalculateUtil.doubleArrMax;
+import static until.CalculateUtil.getDoubleArrMax;
 import static until.CalculateUtil.getPingFangHe;
 import static until.Msjg.riverevolustion;
 
@@ -269,7 +269,7 @@ public class FloodProProblem extends AbstractDoubleProblem {
             //目标2，三峡坝前最高水位最低
             //目标3，三峡出库流量平方和最小
             double object1 = getPingFangHe(QoutXJB);
-            double object2 = doubleArrMax(ZnewSX);
+            double object2 = getDoubleArrMax(ZnewSX);
             double object3 = getPingFangHe(QoutSX);
             solution.setObjective(0, object1);
             solution.setObjective(1, object2);

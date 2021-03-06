@@ -17,12 +17,12 @@ public class CalculateUtil {
         return sum;
     }
 
-    public static double doubleArrMin(double[] x) {
+    public static double getDoubleArrMin(double[] x) {
         Arrays.sort(x);
         return x[0];
     }
 
-    public static double doubleArrMax(double[] x) {
+    public static double getDoubleArrMax(double[] x) {
         Arrays.sort(x);
         return x[x.length-1];
     }
@@ -30,6 +30,6 @@ public class CalculateUtil {
 
     public static void main(String[] args) {
         double[] a = {1.1, 1.2, 1.3};
-        System.out.println(doubleArrMax(a));
+        System.out.println(getDoubleArrMax(a));
     }
 }

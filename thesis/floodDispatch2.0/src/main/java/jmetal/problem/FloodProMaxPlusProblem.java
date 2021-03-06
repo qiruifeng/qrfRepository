@@ -12,7 +12,7 @@ import until.EasyExcelUtil;
 
 import java.util.*;
 
-import static until.CalculateUtil.doubleArrMax;
+import static until.CalculateUtil.getDoubleArrMax;
 import static until.CalculateUtil.getPingFangHe;
 import static until.Msjg.riverevolustion;
 
@@ -36,6 +36,12 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
     private HashMap<String, PolynomialSplineFunction> VZCurvedOfStation = new HashMap<>();
     //水库下泄能力曲线，K-水库名称，V-下泄能力曲线，0-水位，1-下泄能力
     private HashMap<String, PolynomialSplineFunction> ZOutQOfStation = new HashMap<>();
+    //水库流量尾水位曲线
+    private HashMap<String, PolynomialSplineFunction> QOutZOutOfStation = new HashMap<>();
+    //尾水位的反插值，即根据尾水位插流量
+    private HashMap<String, PolynomialSplineFunction> ZOutQOutOfStation = new HashMap<>();
+    //电站预想出力曲线
+    private HashMap<String, PolynomialSplineFunction> PowerOfStation = new HashMap<>();
     //每个水库的起调水位，按照乌白溪向三排列
     private double[] levelStart;
 
@@ -65,7 +71,7 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
         if (stationNum == 1) {
             setNumberOfObjectives(2);
         } else {
-            setNumberOfObjectives(3);
+            setNumberOfObjectives(2);
         }
 
         //设置约束。预留库容约束
@@ -132,7 +138,6 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
 
         if (this.stationNum == 1) {//三峡单库的情况
 
-            //记录超出约束的时段个数
 
             double[] Z = new double[xNum];//把水位当作决策变量
             for (int i = 0; i < xNum; i++) {
@@ -235,6 +240,7 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
             Result resultXLD = getProcess("XLD", levelStart[0], inQFromStation.get("XLD"), Zxld);
             double[] QoutXLD = resultXLD.getQout();
             double[] ZnewXLD = resultXLD.getZnew();
+            double powerXLD = resultXLD.getPower();
             Map<Integer, Double> changeDataXLD = resultXLD.getIntegerDoubleMap();
             //遍历这个map设置种群
             for (Map.Entry<Integer, Double> entry : changeDataXLD.entrySet()) {
@@ -245,6 +251,7 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
             Result resultXJB = getProcess("XJB", levelStart[1], QoutXLD, Zxjb);
             double[] QoutXJB = resultXJB.getQout();
             double[] ZnewXJB = resultXJB.getQout();
+            double powerXJB = resultXJB.getPower();
             Map<Integer, Double> changeDataXJB = resultXJB.getIntegerDoubleMap();
             //遍历这个map设置种群
             for (Map.Entry<Integer, Double> entry : changeDataXJB.entrySet()) {
@@ -269,6 +276,7 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
             Result resultSX = getProcess("SX", levelStart[2], QinSX, Zsx);
             double[] QoutSX = resultSX.getQout();
             double[] ZnewSX = resultSX.getZnew();
+            double powerSX = resultSX.getPower();
             Map<Integer, Double> changeDataSX = resultSX.getIntegerDoubleMap();
             //遍历这个map设置种群
             for (Map.Entry<Integer, Double> entry : changeDataSX.entrySet()) {
@@ -278,13 +286,17 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
             //目标2，三峡坝前最高水位最低
             //目标3，三峡出库流量平方和最小
 //            double object1 = getPingFangHe(QoutXJB);//溪洛渡出库流量平方和最小
-            double object1 = doubleArrMax(ZnewXLD);//溪洛渡最高水位最低
-            double object2 = doubleArrMax(ZnewSX);//三峡最高水位最低
-            double object3 = getPingFangHe(QoutSX);//三峡出库流量平方和最小
-            solution.setObjective(0, object1);
-            solution.setObjective(1, object2);
-            solution.setObjective(2, object3);
+//            double object1 = getDoubleArrMax(ZnewXLD);//溪洛渡最高水位最低
+//            double object2 = getDoubleArrMax(ZnewSX);//三峡最高水位最低
+//            double object3 = getPingFangHe(QoutSX);//三峡出库流量平方和最小
+//            solution.setObjective(0, object1);
+//            solution.setObjective(1, object2);
+//            solution.setObjective(2, object3);
 
+            double target1 = powerXLD + powerXJB + powerSX;
+            double target2 = getPingFangHe(QoutSX);
+            solution.setObjective(0, target1);
+            solution.setObjective(1, target2);
         }
 
 
@@ -342,6 +354,16 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
 
     }
 
+    /**
+     *
+     * @param stationName 电站名字
+     * @param Z           水位过程
+     * @return
+     */
+//    public double getStationPower(String stationName,double[] Z){
+//
+//    }
+
 
     /**
      * 水库参数初始化
@@ -373,36 +395,68 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
                 PolynomialSplineFunction ZOutCapacityOfBHT = splineInterpolator.interpolate(ZOutCapacityOfbht[0], ZOutCapacityOfbht[1]);
                 this.ZOutQOfStation.put("BHT", ZOutCapacityOfBHT);
             case 3:
-                double[][] ZVCurvedOfxld = EasyExcelUtil.readTable("2溪洛渡基本特征曲线", 0);
+                double[][] ZVCurvedOfxld = EasyExcelUtil.readTable("水位库容曲线", 0);
                 PolynomialSplineFunction ZVCurvedOfXLD = splineInterpolator.interpolate(ZVCurvedOfxld[0], ZVCurvedOfxld[1]);
                 PolynomialSplineFunction VZCurvedOfXLD = splineInterpolator.interpolate(ZVCurvedOfxld[1], ZVCurvedOfxld[0]);
                 this.ZVCurvedOfStation.put("XLD", ZVCurvedOfXLD);
                 this.VZCurvedOfStation.put("XLD", VZCurvedOfXLD);
 
-                double[][] ZVCurvedOfxjb = EasyExcelUtil.readTable("3向家坝基本特征曲线", 0);
+                double[][] ZVCurvedOfxjb = EasyExcelUtil.readTable("水位库容曲线", 1);
                 PolynomialSplineFunction ZVCurvedOfXJB = splineInterpolator.interpolate(ZVCurvedOfxjb[0], ZVCurvedOfxjb[1]);
                 PolynomialSplineFunction VZCurvedOfXJB = splineInterpolator.interpolate(ZVCurvedOfxjb[1], ZVCurvedOfxjb[0]);
                 this.ZVCurvedOfStation.put("XJB", ZVCurvedOfXJB);
                 this.VZCurvedOfStation.put("XJB", VZCurvedOfXJB);
 
-                double[][] ZOutCapacityOfxld = EasyExcelUtil.readTable("泄流能力曲线", 1);
+                double[][] ZOutCapacityOfxld = EasyExcelUtil.readTable("泄流能力曲线", 0);
                 PolynomialSplineFunction ZOutCapacityOfXLD = splineInterpolator.interpolate(ZOutCapacityOfxld[0], ZOutCapacityOfxld[1]);
                 this.ZOutQOfStation.put("XLD", ZOutCapacityOfXLD);
 
-                double[][] ZOutCapacityOfxjb = EasyExcelUtil.readTable("泄流能力曲线", 2);
+                double[][] ZOutCapacityOfxjb = EasyExcelUtil.readTable("泄流能力曲线", 1);
                 PolynomialSplineFunction ZOutCapacityOfXJB = splineInterpolator.interpolate(ZOutCapacityOfxjb[0], ZOutCapacityOfxjb[1]);
                 this.ZOutQOfStation.put("XJB", ZOutCapacityOfXJB);
 
+                double[][] QOutZOutOfxld = EasyExcelUtil.readTable("尾水位曲线", 0);
+                PolynomialSplineFunction QOutZOutOfXLD = splineInterpolator.interpolate(QOutZOutOfxld[0], QOutZOutOfxld[1]);
+                PolynomialSplineFunction ZOutQOutOfXLD = splineInterpolator.interpolate(QOutZOutOfxld[1], QOutZOutOfxld[0]);
+                this.QOutZOutOfStation.put("XLD", QOutZOutOfXLD);
+                this.ZOutQOutOfStation.put("XLD", ZOutQOutOfXLD);
+
+                double[][] QOutZOutOfxjb = EasyExcelUtil.readTable("尾水位曲线", 1);
+                PolynomialSplineFunction QOutZOutOfXJB = splineInterpolator.interpolate(QOutZOutOfxjb[0], QOutZOutOfxjb[1]);
+                PolynomialSplineFunction ZOutQOutOfXJB = splineInterpolator.interpolate(QOutZOutOfxjb[1], QOutZOutOfxjb[0]);
+                this.QOutZOutOfStation.put("XJB", QOutZOutOfXJB);
+                this.ZOutQOutOfStation.put("XJB", ZOutQOutOfXJB);
+
+
+                double[][] PowerOfxld = EasyExcelUtil.readTable("预想出力曲线", 0);
+                PolynomialSplineFunction PowerOfXLD = splineInterpolator.interpolate(PowerOfxld[0], PowerOfxld[1]);
+                this.PowerOfStation.put("XLD", PowerOfXLD);
+
+                double[][] PowerOfxjb = EasyExcelUtil.readTable("预想出力曲线", 1);
+                PolynomialSplineFunction PowerOfXJB = splineInterpolator.interpolate(PowerOfxjb[0], PowerOfxjb[1]);
+                this.PowerOfStation.put("XJB", PowerOfXJB);
             case 1:
-                double[][] ZVCurvedOfsx = EasyExcelUtil.readTable("1三峡基本特性曲线", 0);
+                double[][] ZVCurvedOfsx = EasyExcelUtil.readTable("水位库容曲线", 2);
                 PolynomialSplineFunction ZVCurvedOfSX = splineInterpolator.interpolate(ZVCurvedOfsx[0], ZVCurvedOfsx[1]);
                 PolynomialSplineFunction VZCurvedOfSX = splineInterpolator.interpolate(ZVCurvedOfsx[1], ZVCurvedOfsx[0]);
                 this.ZVCurvedOfStation.put("SX", ZVCurvedOfSX);
                 this.VZCurvedOfStation.put("SX", VZCurvedOfSX);
 
-                double[][] ZOutCapacityOfsx = EasyExcelUtil.readTable("泄流能力曲线", 0);
+                double[][] ZOutCapacityOfsx = EasyExcelUtil.readTable("泄流能力曲线", 2);
                 PolynomialSplineFunction ZOutCapacityOfSX = splineInterpolator.interpolate(ZOutCapacityOfsx[0], ZOutCapacityOfsx[1]);
                 this.ZOutQOfStation.put("SX", ZOutCapacityOfSX);
+
+                double[][] QOutZOutOfsx = EasyExcelUtil.readTable("尾水位曲线", 2);
+                PolynomialSplineFunction QOutZOutOfSX = splineInterpolator.interpolate(QOutZOutOfsx[0], QOutZOutOfsx[1]);
+                this.QOutZOutOfStation.put("SX", QOutZOutOfSX);
+
+                double[][] ZOutQOutOfsx = EasyExcelUtil.readTable("尾水位曲线", 3);
+                PolynomialSplineFunction ZOutQOutOfSX = splineInterpolator.interpolate(ZOutQOutOfsx[1], ZOutQOutOfsx[0]);
+                this.ZOutQOutOfStation.put("SX", ZOutQOutOfSX);
+
+                double[][] PowerOfsx = EasyExcelUtil.readTable("预想出力曲线", 2);
+                PolynomialSplineFunction PowerOfSX = splineInterpolator.interpolate(PowerOfsx[0], PowerOfsx[1]);
+                this.PowerOfStation.put("SX", PowerOfSX);
 
                 break;
             default:
@@ -474,6 +528,14 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
         double[] Qout = new double[xNum];
         // 时段流量变化量(m3/s),
         double[] detaQ = new double[xNum];
+        //尾水位
+        double[] Zwei = new double[xNum];
+        //水头
+        double[] detaH = new double[xNum];
+        //时段发电量
+        double[] iPower = new double[xNum];
+        //发电量
+        double power = 0.0;
 
 //        //上游水位插库容
 //        PolynomialSplineFunction zvCurve = ZVCurvedOfStation.get(stationName);
@@ -501,9 +563,43 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
             //时段下泄流量
             Qout[i] = Qin[i] - detaQ[i];
 
-            //处理流量约束,最大值为最大下泄流量
+            //当前水位最大下泄流量
             double maxQ = ZOutQOfStation.get(stationName).value(Zup[i]);
+
+            //按照预想出力的
+
+
+            //预想出力最小值对应的最小水头，在对应一个尾水位的最大值
+            double ZweiMax = 0.0;
+            switch (stationName) {
+                case "SX":
+                    ZweiMax = Math.min(Zup[i] - 61.0, 82.86);
+                    break;
+                case "XJB":
+                    ZweiMax = Math.min(Zup[i] - 82.5, 295);
+                    break;
+                case "XLD":
+                    ZweiMax = Math.min(Zup[i] - 154.6, 407.56);
+                    break;
+            }
+//            System.out.println("i:" + i + " " + stationName + " ZweiMax" + ZweiMax + " Zup[i]" + Zup[i]);
+            //根据这个ZweiMax反插值一个出流量的最大值
+            double Q反插值 = this.ZOutQOutOfStation.get(stationName).value(ZweiMax);
+            maxQ = Math.min(maxQ, Q反插值);
+
             double minQ = 0.0;
+            switch (stationName) {
+                case "XLD":
+                    minQ = 1200.0;
+                    break;
+                case "XJB":
+                    minQ = 1200.0;
+                    break;
+                case "SX":
+                    minQ = 2000.0;
+                    break;
+            }
+
             if (Qout[i] > maxQ) {
                 Qout[i] = maxQ;
                 detaQ[i] = Qin[i] - Qout[i];
@@ -521,10 +617,52 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
                 map.put(i, Z[i]);
             }
             Znew[i] = Z[i];
+
+            //计算发电量
+            Zwei[i] = this.QOutZOutOfStation.get(stationName).value(Qout[i]);
+            detaH[i] = Zup[i] - Zwei[i];
+            /**测试***/
+            System.out.println("测试开始");
+            double detaHmin = 0.0;
+            double detaHmax = 0.0;
+
+            switch (stationName) {
+                case "XLD":
+                    detaHmin = 154.0;
+                    detaHmax = 228;
+                    break;
+                case "XJB":
+                    detaHmin = 83;
+                    detaHmax = 228;
+                    break;
+                case "SX":
+                    detaHmin = 61;
+                    detaHmax = 113;
+                    break;
+            }
+
+            if (detaH[i] < detaHmin || detaH[i] > detaHmax) {
+                if (i == 0) {
+                    System.out.println("时段初水位：" + levelStart + " 时段末水位：" + Znew[i] + " 入流：" + Qin[i] + " 出流：" + Qout[i]);
+                } else {
+                    System.out.println("时段初水位：" + Znew[i - 1] + " 时段末水位：" + Znew[i] + " 入流：" + Qin[i] + " 出流：" + Qout[i]);
+                }
+            }
+            System.out.println("测试结束");
+            /**测试***/
+            iPower[i] = 8.8 * Qout[i] * detaH[i];
+            double powerMax = this.PowerOfStation.get(stationName).value(detaH[i]);
+            if (iPower[i] > powerMax) {
+                iPower[i] = powerMax;
+            }
+            power = power + iPower[i];
+
         }
 
+
         result.setQout(Qout);
-        result.setZnew(Z);
+        result.setZnew(Znew);
+        result.setPower(power);
         result.setIntegerDoubleMap(map);
 
         return result;

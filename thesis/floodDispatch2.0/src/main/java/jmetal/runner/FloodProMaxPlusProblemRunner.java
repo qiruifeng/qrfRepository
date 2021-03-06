@@ -30,7 +30,7 @@ public class FloodProMaxPlusProblemRunner {
         SelectionOperator<List<DoubleSolution>, DoubleSolution> selection;
         String problemName = "floodProThreeMaxPlusStation";
         double[] levelStart = {570.0, 370.0, 145.0};//三个库的起调水位
-        double reserveStorage = 20.0;//亿m³
+        double reserveStorage = 40.0;//亿m³
         int[] T = {85, 96};
         int[] period = {92, 94};//
 
@@ -49,7 +49,7 @@ public class FloodProMaxPlusProblemRunner {
         selection = new BinaryTournamentSelection<DoubleSolution>(new RankingAndCrowdingDistanceComparator<DoubleSolution>());
 
 
-        algorithm = new NSGAII45<DoubleSolution>(problem, 10000, 10000, crossover, mutation,
+        algorithm = new NSGAII45<DoubleSolution>(problem, 10000, 100, crossover, mutation,
                 selection, new SequentialSolutionListEvaluator<DoubleSolution>());
 
 

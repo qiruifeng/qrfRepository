@@ -11,11 +11,16 @@ public class EasyExcelUtil {
 
     public static void main(String[] args) {
         System.out.println("start");
-        double[][] test = readTable("入库数据",0,2,8);
+        double[][] test = EasyExcelUtil.readTable("尾水位曲线", 0);
+        for (int i = 0; i < test.length; i++) {
+            for (int j = 0; j < test[0].length; j++) {
+                System.out.print(test[i][j]);
+            }
+            System.out.println();
+        }
         System.out.println("over");
     }
 
-    //读取文件
 
     /**
      * @param tableName
@@ -25,7 +30,7 @@ public class EasyExcelUtil {
     public static double[][] readTable(String tableName, int sheetIndex) {
 
         String bathPath = "data/baseData/";
-        String endPath = ".xls";
+        String endPath = ".xlsx";
 
         List<Map<Integer, String>> list = new LinkedList<>();
         EasyExcel.read(bathPath + tableName + endPath)
