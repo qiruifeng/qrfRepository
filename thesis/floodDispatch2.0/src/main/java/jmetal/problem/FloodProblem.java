@@ -179,9 +179,6 @@ public class FloodProblem extends AbstractDoubleProblem {
 
             if (Qout[i] > maxQ) {
                 cons += (Qout[i] - maxQ) / maxQ;
-
-
-
                 consNum = consNum + 1;
             } else if (Qout[i] < minQ) {
                 cons += (minQ - Qout[i]) / (maxQ - minQ);

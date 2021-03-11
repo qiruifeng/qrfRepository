@@ -1,6 +1,6 @@
 package jmetal.runner;
 
-import jmetal.problem.FloodProMaxPlusProblem;
+import jmetal.problem.FloodProMaxPlusSXSingleProblem;
 import org.uma.jmetal.algorithm.Algorithm;
 import org.uma.jmetal.algorithm.multiobjective.nsgaii.NSGAII45;
 import org.uma.jmetal.operator.CrossoverOperator;
@@ -20,20 +20,20 @@ import until.ExcelUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FloodProMaxPlusProblemRunner {
+public class FloodProMaxPlusSXRunner {
     public static void main(String[] args) {
         Problem<DoubleSolution> problem;
         Algorithm<List<DoubleSolution>> algorithm;
         CrossoverOperator<DoubleSolution> crossover;
         MutationOperator<DoubleSolution> mutation;
         SelectionOperator<List<DoubleSolution>, DoubleSolution> selection;
-        String problemName = "floodProThreeMaxPlusStation";
-        double[] levelStart = {570.0, 370.0, 145.0};//三个库的起调水位
+        String problemName = "floodProThreeMaxPlusSX";
+        double[] levelStart = {145.0};//三个库的起调水位
         double reserveStorage = 40.0;//亿m³
-        int[] T = {85, 96};
+        int[] T = {2, 123};
         int[] period = {92, 94};//
 
-        problem = new FloodProMaxPlusProblem(T[1] - T[0], 3, levelStart, T, reserveStorage, period);
+        problem = new FloodProMaxPlusSXSingleProblem(T[1] - T[0] + 1, 1, levelStart, T, reserveStorage, period);
 
         double crossoverProbability = 0.9;
         double crossoverDistributionIndex = 20.0;
@@ -48,7 +48,7 @@ public class FloodProMaxPlusProblemRunner {
         selection = new BinaryTournamentSelection<DoubleSolution>(new RankingAndCrowdingDistanceComparator<DoubleSolution>());
 
 
-        algorithm = new NSGAII45<DoubleSolution>(problem, 10000, 100, crossover, mutation,
+        algorithm = new NSGAII45<DoubleSolution>(problem, 1000000, 100, crossover, mutation,
                 selection, new SequentialSolutionListEvaluator<DoubleSolution>());
 
 
