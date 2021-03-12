@@ -20,20 +20,20 @@ import until.ExcelUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FloodProMaxPlusSXRunner {
+import static until.CalculateUtil.getQs;
+
+public class FloodProMaxPlusSXSingleRunner {
     public static void main(String[] args) {
         Problem<DoubleSolution> problem;
         Algorithm<List<DoubleSolution>> algorithm;
         CrossoverOperator<DoubleSolution> crossover;
         MutationOperator<DoubleSolution> mutation;
         SelectionOperator<List<DoubleSolution>, DoubleSolution> selection;
-        String problemName = "floodProThreeMaxPlusSX";
+        String problemName = "FloodProMaxPlusSXSingleProblem";
         double[] levelStart = {145.0};//三个库的起调水位
-        double reserveStorage = 40.0;//亿m³
-        int[] T = {2, 123};
-        int[] period = {92, 94};//
 
-        problem = new FloodProMaxPlusSXSingleProblem(T[1] - T[0] + 1, 1, levelStart, T, reserveStorage, period);
+
+        problem = new FloodProMaxPlusSXSingleProblem(60, 1, levelStart);
 
         double crossoverProbability = 0.9;
         double crossoverDistributionIndex = 20.0;
@@ -48,7 +48,7 @@ public class FloodProMaxPlusSXRunner {
         selection = new BinaryTournamentSelection<DoubleSolution>(new RankingAndCrowdingDistanceComparator<DoubleSolution>());
 
 
-        algorithm = new NSGAII45<DoubleSolution>(problem, 1000000, 100, crossover, mutation,
+        algorithm = new NSGAII45<DoubleSolution>(problem, 100000, 100, crossover, mutation,
                 selection, new SequentialSolutionListEvaluator<DoubleSolution>());
 
 
@@ -56,6 +56,7 @@ public class FloodProMaxPlusSXRunner {
                 .execute();
 
         List<DoubleSolution> population = algorithm.getResult();
+        double[][] Q = getQs(population);//水位过程
 
         long computingTime = algorithmRunner.getComputingTime();
 
@@ -73,10 +74,26 @@ public class FloodProMaxPlusSXRunner {
             tableHeadDimension.add(" ");
         }
 
+        ArrayList<String> tableHeadQ = new ArrayList<>();
+        ArrayList<String> tableHeadDimensionQ = new ArrayList<>();
+        for (int i = 0; i < population.get(0).getNumberOfVariables(); i++) {
+            tableHeadQ.add("Q" + (i + 1));
+            tableHeadDimensionQ.add(" ");
+        }
+
         //保存结果
         String basePath = "data/result/" + problemName + "/";
         boolean flag = ExcelUtil.exportExcelXLSX(population, "非劣前沿结果", tableHead, tableHeadDimension, basePath + problemName + "NSGAII" + ".xlsx");
         if (flag) {
+            System.out.println("保存文件成功！");
+        } else {
+            System.out.println("保存文件失败！");
+        }
+
+        //保存流量结果
+        String basePathQ = "data/result/" + problemName + "/";
+        boolean flagQ = ExcelUtil.exportExcelXLSX(Q, "非劣前沿结果", tableHeadQ, tableHeadDimensionQ, basePathQ + problemName + "QNSGAII.xlsx");
+        if (flagQ) {
             System.out.println("保存文件成功！");
         } else {
             System.out.println("保存文件失败！");

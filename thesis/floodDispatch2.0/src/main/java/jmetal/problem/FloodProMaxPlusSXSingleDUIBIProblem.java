@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static until.CalculateUtil.getDoubleArrMax;
+
 public class FloodProMaxPlusSXSingleDUIBIProblem extends AbstractDoubleProblem {
     private static final long serialVersionUID = 1L;
 
@@ -201,8 +203,8 @@ public class FloodProMaxPlusSXSingleDUIBIProblem extends AbstractDoubleProblem {
         //模型输入
         switch (this.stationNum) {
             case 1: {
-                double[][] inQFromSXOrigin = EasyExcelUtil.readTable("入库数据", 0);
-                double[] inQFromSX = inQFromSXOrigin[2];
+                double[][] inQFromSXOrigin = EasyExcelUtil.readTable("0典型输入数据", 0);
+                double[] inQFromSX = inQFromSXOrigin[3];
                 this.inQFromStation.put("SX", inQFromSX);
                 break;
             }
@@ -280,23 +282,23 @@ public class FloodProMaxPlusSXSingleDUIBIProblem extends AbstractDoubleProblem {
 
 //                if (Qout[i] > maxQ || Qout[i] < minQ) consNum++;
                 if (Qout[i] > maxQ) {
-//                    Qout[i] = maxQ;
-//                    detaQ[i] = inQFromStation.get("SX")[i] - Qout[i];
-//                    detaV[i] = detaQ[i] * 3600 * AvT / Math.pow(10, 8);
-//                    V[i + 1] = detaV[i] + V[i];
-//                    Z[i] = VZCurvedOfStation.get("SX").value(V[i + 1]);
-                    cons += (Qout[i] - maxQ) / maxQ;
-                    consNum = consNum++;
+                    Qout[i] = maxQ;
+                    detaQ[i] = inQFromStation.get("SX")[i] - Qout[i];
+                    detaV[i] = detaQ[i] * 3600 * AvT / Math.pow(10, 8);
+                    V[i + 1] = detaV[i] + V[i];
+                    Z[i] = VZCurvedOfStation.get("SX").value(V[i + 1]);
+//                    cons += (Qout[i] - maxQ) / (maxQ - minQ)*1000000;
+//                    consNum = consNum++;
 //                    map.put(i, Z[i]);
                 }
                 if (Qout[i] > 0.0 && Qout[i] < minQ) {
-//                    Qout[i] = minQ;
-//                    detaQ[i] = inQFromStation.get("SX")[i] - Qout[i];
-//                    detaV[i] = detaQ[i] * 3600 * AvT / Math.pow(10, 8);
-//                    V[i + 1] = detaV[i] + V[i];
-//                    Z[i] = VZCurvedOfStation.get("SX").value(V[i + 1]);
-                    cons += (minQ - Qout[i]) / (maxQ - minQ);
-                    consNum++;
+                    Qout[i] = minQ;
+                    detaQ[i] = inQFromStation.get("SX")[i] - Qout[i];
+                    detaV[i] = detaQ[i] * 3600 * AvT / Math.pow(10, 8);
+                    V[i + 1] = detaV[i] + V[i];
+                    Z[i] = VZCurvedOfStation.get("SX").value(V[i + 1]);
+//                    cons += (minQ - Qout[i]) / (maxQ - minQ);
+//                    consNum++;
                 }
 
                 if (Qout[i] < 0) {
@@ -308,8 +310,10 @@ public class FloodProMaxPlusSXSingleDUIBIProblem extends AbstractDoubleProblem {
                 if (Qout[i] > Qmax) Qmax = Qout[i];
             }
             // 目标
+
+            double a=getDoubleArrMax(Qout);
             solution.setObjective(0, Zmax);
-            solution.setObjective(1, Qmax + cons);
+            solution.setObjective(1, a);
 
 //            solution.setAttribute("overCons", (double) consNum);
         }

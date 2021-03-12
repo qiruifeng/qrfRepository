@@ -22,8 +22,8 @@ public class FloodProMaxPlusSXSingleProblem extends AbstractDoubleProblem implem
 
     //库容约束，直接给一个溪向预留库容
     private double reserveStorage;//目前考虑的:梯级预留库容的约束，给一个总量；String值为XX(溪向)，WBXX(乌白溪向)
-    //整个调度时段
-    private int[] T;
+//    //整个调度时段
+//    private int[] T;
     //库容约束的时段
     private int[] period;
     //水库个数，单库或者3库或者5库
@@ -56,13 +56,12 @@ public class FloodProMaxPlusSXSingleProblem extends AbstractDoubleProblem implem
      * @param xNum       时段个数
      * @param stationNum 水库个数
      * @param levelStart 每个水库的起调水位，按照乌白溪向三排列
-     * @param period
      */
-    public FloodProMaxPlusSXSingleProblem(int xNum, int stationNum, double[] levelStart, int[] T, double reserveStorage, int[] period) {
+    public FloodProMaxPlusSXSingleProblem(int xNum, int stationNum, double[] levelStart) {
 
         this.stationNum = stationNum;
         this.levelStart = levelStart;
-        this.T = T;
+//        this.T = T;
         this.reserveStorage = reserveStorage;
         this.period = period;
 
@@ -220,90 +219,10 @@ public class FloodProMaxPlusSXSingleProblem extends AbstractDoubleProblem implem
             double a = (getDoubleArrMax(Qout) - getDoubleArrMin(inQFromStation.get("SX"))) / (getDoubleArrMax(inQFromStation.get("SX")) - getDoubleArrMin(inQFromStation.get("SX")));
             double b = (cons - getDoubleArrMin(inQFromStation.get("SX"))) / (getDoubleArrMax(inQFromStation.get("SX")) - getDoubleArrMin(inQFromStation.get("SX")));
             solution.setObjective(0, Zmax);
-            solution.setObjective(1, Qmax - cons);
+            solution.setObjective(1, Qmax + cons);
 
 //            solution.setAttribute("overCons", (double) consNum);
         }
-
-        if (this.stationNum == 3) {//溪洛渡向家坝三峡
-            //当三库时，决策变量的0-121是溪洛渡的水位，122-243是向家坝水位，244-365为三峡水位
-            //各个水库的水位，决策变量
-            double[] Zxld = new double[xNum];
-            for (int i = 0; i < xNum; i++) {
-                Zxld[i] = solution.getVariableValue(i);
-            }
-            double[] Zxjb = new double[xNum];
-            for (int i = 0; i < xNum; i++) {
-                Zxjb[i] = solution.getVariableValue(xNum + i);
-            }
-            double[] Zsx = new double[xNum];
-            for (int i = 0; i < xNum; i++) {
-                Zsx[i] = solution.getVariableValue(xNum * 2 + i);
-            }
-
-            //先算溪洛渡
-            Result resultXLD = getProcess("XLD", levelStart[0], inQFromStation.get("XLD"), Zxld);
-            double[] QoutXLD = resultXLD.getQout();
-            double[] ZnewXLD = resultXLD.getZnew();
-            double powerXLD = resultXLD.getPower();
-            Map<Integer, Double> changeDataXLD = resultXLD.getIntegerDoubleMap();
-            //遍历这个map设置种群
-            for (Map.Entry<Integer, Double> entry : changeDataXLD.entrySet()) {
-                solution.setVariableValue(entry.getKey(), entry.getValue());
-            }
-
-            //再算向家坝,向家坝的入库就是溪洛渡的出库
-            Result resultXJB = getProcess("XJB", levelStart[1], QoutXLD, Zxjb);
-            double[] QoutXJB = resultXJB.getQout();
-            double[] ZnewXJB = resultXJB.getQout();
-            double powerXJB = resultXJB.getPower();
-            Map<Integer, Double> changeDataXJB = resultXJB.getIntegerDoubleMap();
-            //遍历这个map设置种群
-            for (Map.Entry<Integer, Double> entry : changeDataXJB.entrySet()) {
-                solution.setVariableValue(entry.getKey() + xNum, entry.getValue());
-            }
-
-            //先用设计洪水把溪洛渡的入流用马斯京根演进到三峡，求出向三区间的入流
-            double[] inQOfXLD = inQFromStation.get("XLD");
-            double[] inQOfXJB = inQOfXLD;
-            double[] inQOfSXFromMSJG = riverevolustion(46, 0.37, inQOfXJB, "日");
-            double[] QUJIAN = new double[inQOfXLD.length];
-            for (int i = 0; i < QUJIAN.length; i++) {
-                QUJIAN[i] = inQFromStation.get("SX")[i] - inQOfSXFromMSJG[i];
-            }
-
-            //算到三峡时，入库就是向家坝出库演进到三峡的流量加上区间的流量
-            double[] MSJG = riverevolustion(46, 0.37, QoutXJB, "日");
-            double[] QinSX = new double[xNum];
-            for (int i = 0; i < xNum; i++) {
-                QinSX[i] = MSJG[i] + QUJIAN[i];
-            }
-            Result resultSX = getProcess("SX", levelStart[2], QinSX, Zsx);
-            double[] QoutSX = resultSX.getQout();
-            double[] ZnewSX = resultSX.getZnew();
-            double powerSX = resultSX.getPower();
-            Map<Integer, Double> changeDataSX = resultSX.getIntegerDoubleMap();
-            //遍历这个map设置种群
-            for (Map.Entry<Integer, Double> entry : changeDataSX.entrySet()) {
-                solution.setVariableValue(entry.getKey() + xNum * 2, entry.getValue());
-            }
-            //目标1，向家坝出库流量平方和最小
-            //目标2，三峡坝前最高水位最低
-            //目标3，三峡出库流量平方和最小
-//            double object1 = getPingFangHe(QoutXJB);//溪洛渡出库流量平方和最小
-//            double object1 = getDoubleArrMax(ZnewXLD);//溪洛渡最高水位最低
-//            double object2 = getDoubleArrMax(ZnewSX);//三峡最高水位最低
-//            double object3 = getPingFangHe(QoutSX);//三峡出库流量平方和最小
-//            solution.setObjective(0, object1);
-//            solution.setObjective(1, object2);
-//            solution.setObjective(2, object3);
-
-            double target1 = powerXLD + powerXJB + powerSX;
-            double target2 = getPingFangHe(QoutSX);
-            solution.setObjective(0, target1);
-            solution.setObjective(1, target2);
-        }
-
 
     }
 
@@ -322,10 +241,10 @@ public class FloodProMaxPlusSXSingleProblem extends AbstractDoubleProblem implem
             Z[i] = solution.getVariableValue(i);
         }
 
-        //每个水库的水位变幅约束[5,4,5]
+        //每个水库的水位变幅约束，三峡水位变幅5m
         for (int i = 0; i < xNum; i++) {
             if (i == 0) {
-                constraint[i] = 4 - Math.abs(this.levelStart[0] - Z[0]);//XLD
+                constraint[i] = 4 - Math.abs(this.levelStart[0] - Z[0]);//sx
             } else {
                 constraint[i] = 4 - Math.abs(Z[i] - Z[i - 1]);
             }
@@ -450,27 +369,12 @@ public class FloodProMaxPlusSXSingleProblem extends AbstractDoubleProblem implem
         //模型输入
         switch (this.stationNum) {
             case 1: {
-                double[][] inQFromSXOrigin = EasyExcelUtil.readTable("入库数据", 0, T[0], T[1]);
-                double[] inQFromSX = inQFromSXOrigin[2];
-                this.inQFromStation.put("SX", inQFromSX);
-                break;
-            }
-            case 3: {
-                double[][] inQFromXLDOrigin = EasyExcelUtil.readTable("入库数据", 1, T[0], T[1]);
-                double[][] inQFromSXOrigin = EasyExcelUtil.readTable("入库数据", 0);
-
-                double[] inQFromXLD = inQFromXLDOrigin[2];
-                double[] inQFromSX = inQFromSXOrigin[2];
-
-                this.inQFromStation.put("XLD", inQFromXLD);
+                double[][] inQFromSXOrigin = EasyExcelUtil.readTable("0典型输入数据", 1);
+                double[] inQFromSX = inQFromSXOrigin[3];
                 this.inQFromStation.put("SX", inQFromSX);
                 break;
             }
 
-            case 5:
-//                Double[][] inQFromWDDOrigin = EasyExcelUtil.readTable("入库数据",0);
-//                Double[][] inQFromQUJIAN5Origin = EasyExcelUtil.readTable("入库数据",0);
-                break;
             default:
                 System.out.println("水库个数只能是1，3，5");
 

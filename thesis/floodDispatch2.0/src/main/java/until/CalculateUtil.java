@@ -98,10 +98,10 @@ public class CalculateUtil {
             V[0] = sxZVCurve.value(145.0);
             for (int j = 0; j < Zup.length; j++) {
 
-                if (i == 0) {
-                    Zup[i] = (145.0 + Z[i]) / 2;
+                if (j == 0) {
+                    Zup[j] = (145.0 + Z[j]) / 2;
                 } else {
-                    Zup[i] = (Z[i] + Z[i - 1]) / 2;
+                    Zup[j] = (Z[j] + Z[j - 1]) / 2;
                 }
                 //根据时刻的水位插出库容
                 V[j + 1] = sxZVCurve.value(Z[j]);

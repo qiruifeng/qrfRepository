@@ -77,7 +77,7 @@ public class FloodProMaxPlusSXSingleDUIBIProblemRunner {
         ArrayList<String> tableHeadQ = new ArrayList<>();
         ArrayList<String> tableHeadDimensionQ = new ArrayList<>();
         for (int i = 0; i < population.get(0).getNumberOfVariables(); i++) {
-            tableHeadQ.add("x" + (i + 1));
+            tableHeadQ.add("Q" + (i + 1));
             tableHeadDimensionQ.add(" ");
         }
 //        tableHead.add("rank");
