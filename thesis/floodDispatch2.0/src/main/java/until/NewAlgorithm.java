@@ -144,8 +144,8 @@ public class NewAlgorithm {
 //        printArrays(a, 121);
         double[] maxLevel = new double[122];
         double[] minLevel = new double[122];
-        for (int i = 0; i < 122; i++) {
-            minLevel[i] = 145;
+        for (int i = 0; i < maxLevel.length; i++) {
+//            minLevel[i] = 145;
             maxLevel[i] = Math.min(175.0, Math.min(145 + i * 5, 145 + (122 - i - 1) * 5));
         }
 

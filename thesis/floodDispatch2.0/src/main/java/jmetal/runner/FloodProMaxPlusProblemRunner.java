@@ -10,6 +10,7 @@ import org.uma.jmetal.operator.impl.crossover.SBXCrossover;
 import org.uma.jmetal.operator.impl.mutation.PolynomialMutation;
 import org.uma.jmetal.operator.impl.selection.BinaryTournamentSelection;
 import org.uma.jmetal.problem.Problem;
+import org.uma.jmetal.runner.AbstractAlgorithmRunner;
 import org.uma.jmetal.solution.DoubleSolution;
 import org.uma.jmetal.util.AlgorithmRunner;
 import org.uma.jmetal.util.JMetalLogger;
@@ -20,7 +21,7 @@ import until.ExcelUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FloodProMaxPlusProblemRunner {
+public class FloodProMaxPlusProblemRunner extends AbstractAlgorithmRunner {
     public static void main(String[] args) {
         Problem<DoubleSolution> problem;
         Algorithm<List<DoubleSolution>> algorithm;
@@ -28,10 +29,10 @@ public class FloodProMaxPlusProblemRunner {
         MutationOperator<DoubleSolution> mutation;
         SelectionOperator<List<DoubleSolution>, DoubleSolution> selection;
         String problemName = "floodProThreeMaxPlusStation";
-        double[] levelStart = {570.0, 370.0, 145.0};//三个库的起调水位
+        double[] levelStart = {560.0, 370.0, 145.0};//三个库的起调水位
         double reserveStorage = 40.0;//亿m³
-        int[] T = {85, 96};
-        int[] period = {92, 94};//
+        int[] T = {47, 62};
+        int[] period = {47, 62};//
 
         problem = new FloodProMaxPlusProblem(T[1] - T[0], 3, levelStart, T, reserveStorage, period);
 
@@ -48,7 +49,7 @@ public class FloodProMaxPlusProblemRunner {
         selection = new BinaryTournamentSelection<DoubleSolution>(new RankingAndCrowdingDistanceComparator<DoubleSolution>());
 
 
-        algorithm = new NSGAII45<DoubleSolution>(problem, 10000, 100, crossover, mutation,
+        algorithm = new NSGAII45<DoubleSolution>(problem, 100000, 100, crossover, mutation,
                 selection, new SequentialSolutionListEvaluator<DoubleSolution>());
 
 

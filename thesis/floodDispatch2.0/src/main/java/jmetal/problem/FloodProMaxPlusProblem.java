@@ -16,6 +16,9 @@ import static until.CalculateUtil.getDoubleArrMax;
 import static until.CalculateUtil.getPingFangHe;
 import static until.Msjg.riverevolustion;
 
+/***
+ * 把预留库容当约束
+ */
 public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements ConstrainedProblem<DoubleSolution> {
 
     private static final long serialVersionUID = 1L;
@@ -74,7 +77,7 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
         } else {//目前就是溪向三
             setNumberOfObjectives(2);
             //设置约束。预留库容约束
-            setNumberOfConstraints(period[1] - period[0] + 1);
+            setNumberOfConstraints(period[1] - period[0]);
         }
 
 
@@ -102,12 +105,12 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
                 }
                 for (int i = xNum; i < xNum * 2; i++) {
                     lowerLimit.add(370.0);
-                    upperLimit.add(Math.min(380.0, 370.0 + (i - xNum * 2 + 1) * 4));//向家坝特征水位
+                    upperLimit.add(Math.min(380.0, 370.0 + (i - xNum + 1) * 4));//向家坝特征水位
                 }
             case 1:
                 for (int i = 0; i < xNum; i++) {
                     lowerLimit.add(145.0);
-                    upperLimit.add(Math.min(175, 145.0 + i * 5));//三峡特征水位
+                    upperLimit.add(Math.min(175, 145.0 + (i + 1) * 5));//三峡特征水位
                 }
                 break;
             default:
@@ -138,95 +141,8 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
         int xNum = getNumberOfVariables() / this.stationNum;
 
 
-        if (this.stationNum == 1) {//三峡单库的情况
+        if (this.stationNum == 3) {
 
-
-            double[] Z = new double[xNum];//把水位当作决策变量
-            for (int i = 0; i < xNum; i++) {
-                Z[i] = solution.getVariableValue(i);
-            }
-            int consNum = 0;
-            //记录一个超过约束的值
-            double cons = 0;
-
-            // 时段时长,单位：小时
-            final int AvT = 24;
-            // 水库平均水位,单位m
-            double[] Zup = new double[xNum];
-            // 时刻库容(10^8m3)
-            double[] V = new double[xNum + 1];
-            // 时段库容变化量(10^8m3)
-            double[] detaV = new double[xNum];
-            // 下泄流量(m3/s)
-            double[] Qout = new double[xNum];
-            // 时段流量变化量(m3/s),
-            double[] detaQ = new double[xNum];
-
-            //上游水位插库容
-            PolynomialSplineFunction zvCurve = ZVCurvedOfStation.get("SX");
-            //上游水位插最大下泄流量
-            PolynomialSplineFunction zOutCurve = ZOutQOfStation.get("SX");
-
-            V[0] = zvCurve.value(this.levelStart[0]);//三峡的起调水位
-            double Zmax = 0.0; // 记录最高水位
-            double Qmax = 0.0; // 记录最大下泄流量
-
-            for (int i = 0; i < Z.length; i++) {
-                // 计算时段平均水位
-                if (i == 0) {
-                    Zup[i] = (this.levelStart[0] + Z[i]) / 2;
-                } else {
-                    Zup[i] = (Z[i] + Z[i - 1]) / 2;
-                }
-                // 根据时刻的水位插出时刻的库容
-                V[i + 1] = zvCurve.value(Z[i]);
-                // 计算时段库容变化量
-                detaV[i] = V[i + 1] - V[i];
-                // 计算时段流量变化量
-                detaQ[i] = detaV[i] * Math.pow(10, 8) / AvT / 3600;
-
-                //时段下泄流量
-                Qout[i] = inQFromStation.get("SX")[i] - detaQ[i];
-                // 时段平均水位对应最大泄流能力
-                double ZoutCapacity = zOutCurve.value(Zup[i]);
-
-                //处理流量约束
-                double controlQmax = 76000.0;//三峡下泄量最大为76000.0
-                if (Zup[i] <= 171) controlQmax = 55000;//当时段平均水位小于171时，
-                double maxQ = Math.min(ZoutCapacity, controlQmax);//当水位大于145小于等于171时，按照控制和最大下泄能力下泄
-
-                double minQ = 2000;//当水位高于145时，最小下泄流量为20000
-                if (Zup[i] <= 145.0) minQ = Math.min(inQFromStation.get("SX")[i], minQ);//水位小于等于145时，按照来水下泄
-
-//                if (Qout[i] > maxQ || Qout[i] < minQ) consNum++;
-                if (Qout[i] > maxQ) {
-                    Qout[i] = maxQ;
-                    detaQ[i] = inQFromStation.get("SX")[i] - Qout[i];
-                    detaV[i] = detaQ[i] * 3600 * AvT / Math.pow(10, 8);
-                    V[i + 1] = detaV[i] + V[i];
-                    Z[i] = VZCurvedOfStation.get("SX").value(V[i + 1]);
-//                    map.put(i, Z[i]);
-                } else if (Qout[i] < minQ) {
-                    Qout[i] = minQ;
-                    detaQ[i] = inQFromStation.get("SX")[i] - Qout[i];
-                    detaV[i] = detaQ[i] * 3600 * AvT / Math.pow(10, 8);
-                    V[i + 1] = detaV[i] + V[i];
-                    Z[i] = VZCurvedOfStation.get("SX").value(V[i + 1]);
-                }
-
-                if (Z[i] > Zmax) Zmax = Z[i];
-                if (Qout[i] > Qmax) Qmax = Qout[i];
-            }
-            // 目标
-            solution.setObjective(0, Zmax);
-            solution.setObjective(1, Qmax);
-
-//            solution.setAttribute("overCons", (double) consNum);
-        }
-
-        if (this.stationNum == 3) {//溪洛渡向家坝三峡
-            //当三库时，决策变量的0-121是溪洛渡的水位，122-243是向家坝水位，244-365为三峡水位
-            //各个水库的水位，决策变量
             double[] Zxld = new double[xNum];
             for (int i = 0; i < xNum; i++) {
                 Zxld[i] = solution.getVariableValue(i);
@@ -254,7 +170,7 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
             //再算向家坝,向家坝的入库就是溪洛渡的出库
             Result resultXJB = getProcess("XJB", levelStart[1], QoutXLD, Zxjb);
             double[] QoutXJB = resultXJB.getQout();
-            double[] ZnewXJB = resultXJB.getQout();
+            double[] ZnewXJB = resultXJB.getZnew();
             double powerXJB = resultXJB.getPower();
             Map<Integer, Double> changeDataXJB = resultXJB.getIntegerDoubleMap();
             //遍历这个map设置种群
@@ -297,10 +213,21 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
 //            solution.setObjective(1, object2);
 //            solution.setObjective(2, object3);
 
-            double target1 = powerXLD + powerXJB + powerSX;
-            double target2 = getPingFangHe(QoutSX);
+            //三库连调
+//            double target1 = powerXLD + powerXJB + powerSX;
+//            double target2 = getPingFangHe(QoutSX);
+//            double q = getDoubleArrMax(QoutSX);
+//            solution.setObjective(0, target1);
+//            solution.setObjective(1, target2);
+//            solution.setAttribute("Qmax", q);
+
+            //溪向联合调度
+            double target1 = 1/(powerXLD + powerXJB);
+            double target2 = getPingFangHe(QoutXJB);
+            double q = getDoubleArrMax(QoutXJB);
             solution.setObjective(0, target1);
-            solution.setObjective(1, target2);
+            solution.setObjective(1, q);
+            solution.setAttribute("Qmax", q);
         }
 
 
@@ -477,10 +404,10 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
                 break;
             }
             case 3: {
-                double[][] inQFromXLDOrigin = EasyExcelUtil.readTable("入库数据", 1, T[0], T[1]);
-                double[][] inQFromSXOrigin = EasyExcelUtil.readTable("入库数据", 0);
+                double[][] inQFromXLDOrigin = EasyExcelUtil.readTable("入库数据", 0, T[0], T[1]);
+                double[][] inQFromSXOrigin = EasyExcelUtil.readTable("入库数据", 0, T[0], T[1]);
 
-                double[] inQFromXLD = inQFromXLDOrigin[2];
+                double[] inQFromXLD = inQFromXLDOrigin[3];
                 double[] inQFromSX = inQFromSXOrigin[2];
 
                 this.inQFromStation.put("XLD", inQFromXLD);
@@ -567,10 +494,19 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
             //时段下泄流量
             Qout[i] = Qin[i] - detaQ[i];
 
-            //当前水位最大下泄流量
+            //当前水位最大下泄流量,这里最大不能按照下泄能力设置
             double maxQ = ZOutQOfStation.get(stationName).value(Zup[i]);
-
-            //按照预想出力的
+            if (stationName.equals("SX")) {
+                if (Zup[i] > 145 && Zup[i] < 171) {
+                    maxQ = Math.min(55000, maxQ);
+                }
+                if (Zup[i] >= 171) {
+                    maxQ = Math.min(76000, maxQ);
+                }
+            }
+            if (stationName.equals("XLD") || stationName.equals("XJB")) {
+                maxQ = Math.min(50000, maxQ);
+            }
 
 
             //预想出力最小值对应的最小水头，在对应一个尾水位的最大值
@@ -600,7 +536,8 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
                     minQ = 1200.0;
                     break;
                 case "SX":
-                    minQ = 2000.0;
+                    if (Z[i] <= 171) minQ = 45000.0;
+                    if (Z[i] > 171) minQ = 70000.0;
                     break;
             }
 
@@ -620,39 +557,45 @@ public class FloodProMaxPlusProblem extends AbstractDoubleProblem implements Con
                 Z[i] = VZCurvedOfStation.get(stationName).value(V[i + 1]);
                 map.put(i, Z[i]);
             }
+
+
+            //在判断是否超过水位约束
             Znew[i] = Z[i];
+
 
             //计算发电量
             Zwei[i] = this.QOutZOutOfStation.get(stationName).value(Qout[i]);
             detaH[i] = Zup[i] - Zwei[i];
             /**测试***/
-            System.out.println("测试开始");
-            double detaHmin = 0.0;
-            double detaHmax = 0.0;
-
-            switch (stationName) {
-                case "XLD":
-                    detaHmin = 154.0;
-                    detaHmax = 228;
-                    break;
-                case "XJB":
-                    detaHmin = 83;
-                    detaHmax = 228;
-                    break;
-                case "SX":
-                    detaHmin = 61;
-                    detaHmax = 113;
-                    break;
-            }
-
-            if (detaH[i] < detaHmin || detaH[i] > detaHmax) {
-                if (i == 0) {
-                    System.out.println("时段初水位：" + levelStart + " 时段末水位：" + Znew[i] + " 入流：" + Qin[i] + " 出流：" + Qout[i]);
-                } else {
-                    System.out.println("时段初水位：" + Znew[i - 1] + " 时段末水位：" + Znew[i] + " 入流：" + Qin[i] + " 出流：" + Qout[i]);
-                }
-            }
-            System.out.println("测试结束");
+//            {
+//                System.out.println("测试开始");
+//                double detaHmin = 0.0;
+//                double detaHmax = 0.0;
+//
+//                switch (stationName) {
+//                    case "XLD":
+//                        detaHmin = 154.0;
+//                        detaHmax = 228;
+//                        break;
+//                    case "XJB":
+//                        detaHmin = 83;
+//                        detaHmax = 228;
+//                        break;
+//                    case "SX":
+//                        detaHmin = 61;
+//                        detaHmax = 113;
+//                        break;
+//                }
+//
+//                if (detaH[i] < detaHmin || detaH[i] > detaHmax) {
+//                    if (i == 0) {
+//                        System.out.println("时段初水位：" + levelStart + " 时段末水位：" + Znew[i] + " 入流：" + Qin[i] + " 出流：" + Qout[i]);
+//                    } else {
+//                        System.out.println("时段初水位：" + Znew[i - 1] + " 时段末水位：" + Znew[i] + " 入流：" + Qin[i] + " 出流：" + Qout[i]);
+//                    }
+//                }
+//                System.out.println("测试结束");
+//            }
             /**测试***/
             iPower[i] = 8.8 * Qout[i] * detaH[i];
             double powerMax = this.PowerOfStation.get(stationName).value(detaH[i]);

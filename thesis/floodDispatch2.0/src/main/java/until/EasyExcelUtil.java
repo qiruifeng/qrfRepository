@@ -11,10 +11,10 @@ public class EasyExcelUtil {
 
     public static void main(String[] args) {
         System.out.println("start");
-        double[][] test = EasyExcelUtil.readTable("尾水位曲线", 0);
+        double[][] test = EasyExcelUtil.readTable("入库数据", 0,3,5);
         for (int i = 0; i < test.length; i++) {
             for (int j = 0; j < test[0].length; j++) {
-                System.out.print(test[i][j]);
+                System.out.print(test[i][j]+" ");
             }
             System.out.println();
         }

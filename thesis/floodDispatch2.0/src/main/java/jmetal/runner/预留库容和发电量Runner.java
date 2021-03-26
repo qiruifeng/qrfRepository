@@ -1,6 +1,7 @@
 package jmetal.runner;
 
-import jmetal.problem.FloodProMaxPlusSXSingleProblem;
+import jmetal.problem.FloodProMaxPlusProblem;
+import jmetal.problem.预留库容和发电量;
 import org.uma.jmetal.algorithm.Algorithm;
 import org.uma.jmetal.algorithm.multiobjective.nsgaii.NSGAII45;
 import org.uma.jmetal.operator.CrossoverOperator;
@@ -10,6 +11,7 @@ import org.uma.jmetal.operator.impl.crossover.SBXCrossover;
 import org.uma.jmetal.operator.impl.mutation.PolynomialMutation;
 import org.uma.jmetal.operator.impl.selection.BinaryTournamentSelection;
 import org.uma.jmetal.problem.Problem;
+import org.uma.jmetal.runner.AbstractAlgorithmRunner;
 import org.uma.jmetal.solution.DoubleSolution;
 import org.uma.jmetal.util.AlgorithmRunner;
 import org.uma.jmetal.util.JMetalLogger;
@@ -20,23 +22,21 @@ import until.ExcelUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-import static until.CalculateUtil.getQs;
-
-public class FloodProMaxPlusSXSingleRunner {
+public class 预留库容和发电量Runner extends AbstractAlgorithmRunner {
     public static void main(String[] args) {
         Problem<DoubleSolution> problem;
         Algorithm<List<DoubleSolution>> algorithm;
         CrossoverOperator<DoubleSolution> crossover;
         MutationOperator<DoubleSolution> mutation;
         SelectionOperator<List<DoubleSolution>, DoubleSolution> selection;
-        String problemName = "FloodProMaxPlusSXSingleProblem";
-        double[] levelStart = {145.0};//三个库的起调水位
-//        int[] T = {47, 61};
-
-        int[] T = {83,97};
+        String problemName = "预留库容和发电量";
+        double[] levelStart = {560.0, 370.0, 145.0};//三个库的起调水位
 
 
-        problem = new FloodProMaxPlusSXSingleProblem(15, 1, levelStart,T);
+        int[] T = {68, 82};
+
+
+        problem = new 预留库容和发电量(T[1] - T[0], 3, levelStart,T);
 
         double crossoverProbability = 0.9;
         double crossoverDistributionIndex = 20.0;
@@ -51,7 +51,7 @@ public class FloodProMaxPlusSXSingleRunner {
         selection = new BinaryTournamentSelection<DoubleSolution>(new RankingAndCrowdingDistanceComparator<DoubleSolution>());
 
 
-        algorithm = new NSGAII45<DoubleSolution>(problem, 100000, 200, crossover, mutation,
+        algorithm = new NSGAII45<DoubleSolution>(problem, 1000000, 200, crossover, mutation,
                 selection, new SequentialSolutionListEvaluator<DoubleSolution>());
 
 
@@ -59,7 +59,6 @@ public class FloodProMaxPlusSXSingleRunner {
                 .execute();
 
         List<DoubleSolution> population = algorithm.getResult();
-        double[][] Q = getQs(population);//水位过程
 
         long computingTime = algorithmRunner.getComputingTime();
 
@@ -77,26 +76,10 @@ public class FloodProMaxPlusSXSingleRunner {
             tableHeadDimension.add(" ");
         }
 
-        ArrayList<String> tableHeadQ = new ArrayList<>();
-        ArrayList<String> tableHeadDimensionQ = new ArrayList<>();
-        for (int i = 0; i < population.get(0).getNumberOfVariables(); i++) {
-            tableHeadQ.add("Q" + (i + 1));
-            tableHeadDimensionQ.add(" ");
-        }
-
         //保存结果
         String basePath = "data/result/" + problemName + "/";
         boolean flag = ExcelUtil.exportExcelXLSX(population, "非劣前沿结果", tableHead, tableHeadDimension, basePath + problemName + "NSGAII" + ".xlsx");
         if (flag) {
-            System.out.println("保存文件成功！");
-        } else {
-            System.out.println("保存文件失败！");
-        }
-
-        //保存流量结果
-        String basePathQ = "data/result/" + problemName + "/";
-        boolean flagQ = ExcelUtil.exportExcelXLSX(Q, "非劣前沿结果", tableHeadQ, tableHeadDimensionQ, basePathQ + problemName + "QNSGAII.xlsx");
-        if (flagQ) {
             System.out.println("保存文件成功！");
         } else {
             System.out.println("保存文件失败！");

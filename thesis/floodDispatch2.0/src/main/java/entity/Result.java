@@ -13,6 +13,11 @@ public class Result {
     private double[] Qout;
 
     /**
+     * 发电流量
+     */
+    private double[] Qpower;
+
+    /**
      * 新的水位过程
      */
     private double[] Znew;

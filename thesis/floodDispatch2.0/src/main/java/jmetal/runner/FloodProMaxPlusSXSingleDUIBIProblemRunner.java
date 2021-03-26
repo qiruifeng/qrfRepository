@@ -35,13 +35,15 @@ public class FloodProMaxPlusSXSingleDUIBIProblemRunner {
         String referenceParetoFront = "";
         String problemName = "FloodProMaxPlusSXSingleDUIBIProblem";
         double[] level = {145.5};
-        problem = new FloodProMaxPlusSXSingleDUIBIProblem(122, 1, level);
+        problem = new FloodProMaxPlusSXSingleDUIBIProblem(64, 1, level);
 
         double crossoverProbability = 0.9;
         double crossoverDistributionIndex = 20.0;
         crossover = new SBXCrossover(crossoverProbability, crossoverDistributionIndex);
 
+//        double mutationProbability = Math.pow(1.0 / problem.getNumberOfVariables(),0.8);
         double mutationProbability = 1.0 / problem.getNumberOfVariables();
+
         double mutationDistributionIndex = 20.0;
         // 多项式变异
         mutation = new PolynomialMutation(mutationProbability, mutationDistributionIndex);

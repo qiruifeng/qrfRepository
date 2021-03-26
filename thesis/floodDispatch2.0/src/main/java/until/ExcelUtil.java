@@ -25,12 +25,9 @@ public class ExcelUtil {
      * 保存非劣解集进excel
      *
      * @param pop
-     * @param sheetName
-     *            sheet名称
-     * @param tableHead
-     *            表头名称
-     * @param tableHeadDimension
-     *            表头单位
+     * @param sheetName          sheet名称
+     * @param tableHead          表头名称
+     * @param tableHeadDimension 表头单位
      * @return
      */
     @SuppressWarnings("deprecation")
@@ -192,7 +189,7 @@ public class ExcelUtil {
             row = sheet.createRow(i + 2);
 
 //            Solution chrom = pop.get(i);
-            double[] chrom= pop[i];
+            double[] chrom = pop[i];
             int curIndex = chrom.length;
 
             for (int j = 0; j < curIndex; j++) {
@@ -260,7 +257,7 @@ public class ExcelUtil {
 
 
     public static boolean exportExcelXLSX(List<DoubleSolution> pop, String sheetName, ArrayList<String> tableHead,
-                                      ArrayList<String> tableHeadDimension, String excelPath) {
+                                          ArrayList<String> tableHeadDimension, String excelPath) {
 
         File file = new File(excelPath);
         File parentFile = file.getParentFile();
@@ -323,14 +320,53 @@ public class ExcelUtil {
             }
             curIndex = curIndex + chrom.getNumberOfObjectives();
 
-            // 添加违反约束的值
+            //添加违反约束的值
 //            double overCons = (double) chrom.getAttribute("overCons");
 ////            double overCons = (double) chrom.get;
 //            // 写值
 //            row.createCell(curIndex).setCellValue(overCons);
-            // 改样式
+//             //改样式
 //            row.getCell(curIndex).setCellStyle(style);
 //            curIndex = curIndex + 1;
+            if (chrom.getAttribute("power") != null) {
+                double Qmax = (double) chrom.getAttribute("power");
+                row.createCell(curIndex).setCellValue(Qmax);
+                row.getCell(curIndex).setCellStyle(style);
+                curIndex = curIndex + 1;
+            }
+            if (chrom.getAttribute("Qmax") != null) {
+                double Qmax = (double) chrom.getAttribute("Qmax");
+                row.createCell(curIndex).setCellValue(Qmax);
+                row.getCell(curIndex).setCellStyle(style);
+                curIndex = curIndex + 1;
+            }
+            if (chrom.getAttribute("Qmin") != null) {
+                double Qmax = (double) chrom.getAttribute("Qmin");
+                row.createCell(curIndex).setCellValue(Qmax);
+                row.getCell(curIndex).setCellStyle(style);
+                curIndex = curIndex + 1;
+            }
+            if (chrom.getAttribute("n") != null){
+                double Qmax = (double) chrom.getAttribute("n");
+                row.createCell(curIndex).setCellValue(Qmax);
+                row.getCell(curIndex).setCellStyle(style);
+                curIndex = curIndex + 1;
+            }
+            if (chrom.getAttribute("V_left_min") != null){
+                double Qmax = (double) chrom.getAttribute("V_left_min");
+                row.createCell(curIndex).setCellValue(Qmax);
+                row.getCell(curIndex).setCellStyle(style);
+                curIndex = curIndex + 1;
+            }
+            if (chrom.getAttribute("PingFangHe") != null){
+                double Qmax = (double) chrom.getAttribute("PingFangHe");
+                row.createCell(curIndex).setCellValue(Qmax);
+                row.getCell(curIndex).setCellStyle(style);
+                curIndex = curIndex + 1;
+            }
+
+
+
 
             /*
             // 添加等级
