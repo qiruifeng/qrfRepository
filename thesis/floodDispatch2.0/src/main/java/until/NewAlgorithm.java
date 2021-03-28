@@ -64,6 +64,57 @@ public class NewAlgorithm {
     }
 
     /**
+     * 生成原始序列,不固定末水位
+     *
+     * @return
+     */
+    public static double[] generatorOriginalSequence2(int xNum, String stationName) {
+
+        double levelMin = 0.0;
+        double levelMax = 0.0;
+        double detaH = 0.0;
+
+        if (stationName.equals("SX")) {
+            levelMin = 145;
+            levelMax = 175;
+            detaH = 5.0;
+        }
+
+        double[] ans = new double[xNum];
+        Random random = new Random();
+        int 峰形 = random.nextInt(2);//0,1随机生成
+        if (峰形 == 0) {//类型1，回到初始水位
+            int ran1 = random.nextInt(xNum);
+            int ran2 = random.nextInt(xNum);
+            while (ran1 == ran2) {
+                ran2 = random.nextInt(xNum);
+            }
+            int ranMin = Math.min(ran1, ran2);
+            int ranMax = Math.max(ran1, ran2);
+            for (int i = 0; i < ranMin; i++) {
+                ans[i] = levelMin;
+            }
+            for (int i = ranMin; i < ranMax; i++) {
+                ans[i] = Math.min(levelMax, Math.min(145 + (i - ranMin) * detaH, 145 + (ranMax - i) * detaH));
+            }
+            for (int i = ranMax; i < xNum; i++) {
+                ans[i] = levelMin;
+            }
+
+        }
+        if (峰形 == 1) {//类型2，无法回到初始水位
+            int ran = random.nextInt(xNum);
+            for (int i = 0; i < ran; i++) {
+                ans[i] = levelMin;
+            }
+            for (int i = ran; i < xNum; i++) {
+                ans[i] = Math.min(levelMax, 145 + (i - ran) * detaH);
+            }
+        }
+        return ans;
+    }
+
+    /**
      * 水位联动操作
      *
      * @param y2    使动水位原始值
@@ -108,18 +159,20 @@ public class NewAlgorithm {
      * @return 变异后的序列
      */
     public static double[] Mutations(double[] Z, double[] maxLevel, double[] minlevel) {
-        double[] ans = new double[122];
+
+        int xNum = Z.length;
+        double[] ans = new double[xNum];
 
         Random random = new Random();
-        int T = random.nextInt(120) + 1;
+        int T = random.nextInt(xNum);
         ans[T] = Math.random() * (maxLevel[T] - minlevel[T]) + minlevel[T];
         //往右联动
-        for (int i = T; i < 121; i++) {
-            ans[i + 1] = NewPosition(Z[i], ans[i], Z[i + 1], 5.0, 0.2, maxLevel[i], minlevel[i]);
+        for (int i = T; i < xNum - 1; i++) {
+            ans[i + 1] = NewPosition(Z[i], ans[i], Z[i + 1], 5.0, 0.2, maxLevel[i+1], minlevel[i+1]);
         }
         //往左联动
         for (int i = T; i > 0; i--) {
-            ans[i - 1] = NewPosition(Z[i], ans[i], Z[i - 1], 5.0, 0.2, maxLevel[i], minlevel[i]);
+            ans[i - 1] = NewPosition(Z[i], ans[i], Z[i - 1], 5.0, 0.2, maxLevel[i-1], minlevel[i-1]);
         }
         return ans;
     }
@@ -129,10 +182,24 @@ public class NewAlgorithm {
      *
      * @return 返回初始个体
      */
-    public static double[] generatorOneSolution(double[] max, double[] min) {
+    public static double[] generatorOneSolution(double[] max, double[] min,int n) {
 
         double[] sequence = generatorOriginalSequence();
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < n; i++) {
+            sequence = Mutations(sequence, max, min);
+        }
+        double[] ans = sequence;
+        return ans;
+    }
+
+    /**
+     * 生成初始个体
+     *
+     * @return 返回初始个体
+     */
+    public static double[] generatorOneSolution2(int xNum,double[] max, double[] min,int n){
+        double[] sequence = generatorOriginalSequence2(xNum,"SX");
+        for (int i = 0; i < n; i++) {
             sequence = Mutations(sequence, max, min);
         }
         double[] ans = sequence;
@@ -142,18 +209,34 @@ public class NewAlgorithm {
     public static void main(String[] args) {
 //        double[] a = generatorOriginalSequence();
 //        printArrays(a, 121);
-        double[] maxLevel = new double[122];
-        double[] minLevel = new double[122];
-        for (int i = 0; i < maxLevel.length; i++) {
-//            minLevel[i] = 145;
-            maxLevel[i] = Math.min(175.0, Math.min(145 + i * 5, 145 + (122 - i - 1) * 5));
-        }
+//        double[] maxLevel = new double[122];
+//        double[] minLevel = new double[122];
+//        for (int i = 0; i < maxLevel.length; i++) {
+////            minLevel[i] = 145;
+//            maxLevel[i] = Math.min(175.0, Math.min(145 + i * 5, 145 + (122 - i - 1) * 5));
+//        }
 
 //        printArrays(maxLevel, 121);
 //        double[] a = generatorOriginalSequence();
 //        double[] b = Mutations(a, maxLevel, minLevel);
-        printArrays(maxLevel,121);
-        double[] c=generatorOneSolution(maxLevel,minLevel);
-        printArrays(c, 121);
+//        printArrays(maxLevel, 121);
+//        double[] c = generatorOneSolution(maxLevel, minLevel);
+
+
+        int xNum = 15;
+        double[] maxLevel = new double[xNum];
+        double[] minLevel = new double[xNum];
+        for (int i = 0; i < xNum; i++) {
+            minLevel[i] = 145;
+            maxLevel[i] = Math.min(175.0, (145 + i * 5));
+        }
+
+//        double[] c = generatorOriginalSequence2(xNum, "SX");
+//        double[] d = Mutations(c, maxLevel, minLevel);
+        printArrays(maxLevel,14);
+        printArrays(minLevel,14);
+
+        double[] a = generatorOneSolution2(15,maxLevel,minLevel,10);
+        printArrays(a, 14);
     }
 }
