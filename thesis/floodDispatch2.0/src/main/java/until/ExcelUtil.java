@@ -329,8 +329,8 @@ public class ExcelUtil {
 //            row.getCell(curIndex).setCellStyle(style);
 //            curIndex = curIndex + 1;
             if (chrom.getAttribute("power") != null) {
-                double Qmax = (double) chrom.getAttribute("power");
-                row.createCell(curIndex).setCellValue(Qmax);
+                double power = (double) chrom.getAttribute("power");
+                row.createCell(curIndex).setCellValue(power);
                 row.getCell(curIndex).setCellStyle(style);
                 curIndex = curIndex + 1;
             }
@@ -341,26 +341,32 @@ public class ExcelUtil {
                 curIndex = curIndex + 1;
             }
             if (chrom.getAttribute("Qmin") != null) {
-                double Qmax = (double) chrom.getAttribute("Qmin");
-                row.createCell(curIndex).setCellValue(Qmax);
+                double Qmin = (double) chrom.getAttribute("Qmin");
+                row.createCell(curIndex).setCellValue(Qmin);
                 row.getCell(curIndex).setCellStyle(style);
                 curIndex = curIndex + 1;
             }
             if (chrom.getAttribute("n") != null){
-                double Qmax = (double) chrom.getAttribute("n");
-                row.createCell(curIndex).setCellValue(Qmax);
+                double n = (double) chrom.getAttribute("n");
+                row.createCell(curIndex).setCellValue(n);
                 row.getCell(curIndex).setCellStyle(style);
                 curIndex = curIndex + 1;
             }
             if (chrom.getAttribute("V_left_min") != null){
-                double Qmax = (double) chrom.getAttribute("V_left_min");
-                row.createCell(curIndex).setCellValue(Qmax);
+                double v_left_min = (double) chrom.getAttribute("V_left_min");
+                row.createCell(curIndex).setCellValue(v_left_min);
+                row.getCell(curIndex).setCellStyle(style);
+                curIndex = curIndex + 1;
+            }
+            if (chrom.getAttribute("V_left_max") != null){
+                double v_left_max = (double) chrom.getAttribute("V_left_max");
+                row.createCell(curIndex).setCellValue(v_left_max);
                 row.getCell(curIndex).setCellStyle(style);
                 curIndex = curIndex + 1;
             }
             if (chrom.getAttribute("PingFangHe") != null){
-                double Qmax = (double) chrom.getAttribute("PingFangHe");
-                row.createCell(curIndex).setCellValue(Qmax);
+                double pingFangHe = (double) chrom.getAttribute("PingFangHe");
+                row.createCell(curIndex).setCellValue(pingFangHe);
                 row.getCell(curIndex).setCellStyle(style);
                 curIndex = curIndex + 1;
             }

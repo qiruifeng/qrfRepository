@@ -120,7 +120,7 @@ public class 固定预留库容_下泄流量和发电量 extends AbstractDoubleP
 
 
     @Override
-    public void evaluateConstraints(DoubleSolution solution) {
+    public void evaluate(DoubleSolution solution) {
 
         int xNum = getNumberOfVariables() / (this.stationNum - 1);
         if (this.stationNum == 3) {
@@ -194,7 +194,7 @@ public class 固定预留库容_下泄流量和发电量 extends AbstractDoubleP
     }
 
     @Override
-    public void evaluate(DoubleSolution solution) {
+    public void evaluateConstraints(DoubleSolution solution) {
         int xNum = solution.getNumberOfVariables() / (this.stationNum - 1);
 
         double[] Z = new double[solution.getNumberOfVariables()];

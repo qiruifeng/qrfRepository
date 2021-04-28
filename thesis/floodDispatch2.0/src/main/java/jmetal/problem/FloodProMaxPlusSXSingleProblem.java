@@ -361,8 +361,6 @@ public class FloodProMaxPlusSXSingleProblem extends AbstractDoubleProblem {
 
 
             //按照预想出力的
-
-
             double minQ = 0.0;
             switch (stationName) {
                 case "XLD":

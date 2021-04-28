@@ -161,7 +161,6 @@ public class 预留库容和发电量 extends AbstractDoubleProblem {
             double[] ZnewXJB = resultXJB.getZnew();
             double powerXJB = resultXJB.getPower();
             System.out.println("powerXJB:"+powerXJB/100000000);
-
             Map<Integer, Double> changeDataXJB = resultXJB.getIntegerDoubleMap();
             //遍历这个map设置种群
             for (Map.Entry<Integer, Double> entry : changeDataXJB.entrySet()) {
