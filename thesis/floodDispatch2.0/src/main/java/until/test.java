@@ -6,5 +6,7 @@ public class test {
         double[] b=a;
         b[0] = 10.0;
         System.out.println(a[0]);
+
+        System.out.println("test git");
     }
 }
